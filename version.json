@@ -1,0 +1,46 @@
+{
+  "version": "0.0.0010",
+  "name": "DRAIS",
+  "description": "School Management System by Xhenvolt",
+  "lastUpdated": "2025-12-02",
+  "changelog": [
+    {
+      "version": "0.0.0010",
+      "date": "2025-12-02",
+      "changes": [
+        "Added comprehensive attendance management system with class-wise tracking",
+        "Created detailed settings page with 6 major configuration sections",
+        "Implemented system information and maintenance controls",
+        "Added notification preferences and security settings",
+        "Integrated appearance customization with theme switching",
+        "Setup third-party integrations framework",
+        "Enhanced mobile responsiveness across all pages",
+        "Completed core DRAIS frontend infrastructure"
+      ]
+    },
+    {
+      "version": "0.0.0008",
+      "date": "2025-12-02",
+      "changes": [
+        "Created comprehensive landing page with hero, features, about, and CTA sections",
+        "Built dashboard layout with responsive sidebar and mobile bottom navigation",
+        "Developed main dashboard page with stats, quick actions, and activity feeds",
+        "Created students management page with table, search, and filters",
+        "Added staff management page with comprehensive staff records",
+        "Implemented dark/light theme provider with automatic switching",
+        "Added Framer Motion animations throughout the application",
+        "Configured mobile-first responsive design"
+      ]
+    },
+    {
+      "version": "0.0.0001",
+      "date": "2025-12-02",
+      "changes": [
+        "Initial project setup",
+        "Installed all required dependencies",
+        "Configured ShadCN/UI components",
+        "Setup Tailwind CSS with custom color palettes"
+      ]
+    }
+  ]
+}
