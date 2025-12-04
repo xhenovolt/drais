@@ -65,7 +65,6 @@ import {
   Lightbulb,
   Brain,
   Activity,
-  BarChart3,
 } from "lucide-react";
 import {
   DropdownMenu,
