@@ -10,6 +10,9 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import FloatingChatbot from "@/components/floating-chatbot";
 import AIRecommendationModals from "@/components/ai-recommendation-modals";
+import WhatsNewModal from "@/components/whats-new-modal";
+import EnhancedSearchBar from "@/components/enhanced-search-bar";
+import CookieConsentBanner from "@/components/cookie-consent-banner";
 import {
   LayoutDashboard,
   Users,
@@ -230,18 +233,21 @@ const mobileNavigation = [
 
 export default function DashboardLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [expandedGroups, setExpandedGroups] = useState(["Overview", "Students", "AI Insights"]);
+  const [expandedGroups, setExpandedGroups] = useState(["Overview"]);
   const pathname = usePathname();
   const { theme, toggleTheme } = useTheme();
 
   const isActive = (href) => pathname === href;
   
   const toggleGroup = (groupName) => {
-    setExpandedGroups((prev) =>
-      prev.includes(groupName)
-        ? prev.filter((g) => g !== groupName)
-        : [...prev, groupName]
-    );
+    setExpandedGroups((prev) => {
+      // If clicking the same group, close it
+      if (prev.includes(groupName)) {
+        return prev.filter((g) => g !== groupName);
+      }
+      // Otherwise, close all others and open this one (only one at a time)
+      return [groupName];
+    });
   };
 
   return (
@@ -461,16 +467,9 @@ export default function DashboardLayout({ children }) {
               <Menu className="w-5 h-5" />
             </Button>
 
-            {/* Search Bar */}
+            {/* Enhanced Search Bar */}
             <div className="hidden md:flex items-center flex-1 max-w-md">
-              <div className="relative w-full">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search students, staff, classes..."
-                  className="w-full pl-10 pr-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
+              <EnhancedSearchBar />
             </div>
 
             {/* Right Side Actions */}
@@ -558,16 +557,22 @@ export default function DashboardLayout({ children }) {
                   }`}
                 >
                   <item.icon className="w-6 h-6" />
-                  <span className="text-xs font-medium">{item.name}</span>
-                </motion.div>
-              </Link>
-            );
-          })}
-        </div>
-      </nav>
+                <span className="text-xs font-medium">{item.name}</span>
+              </motion.div>
+            </Link>
+          );
+        })}
+      </div>
+    </nav>
 
-      {/* AI Recommendation Modals */}
-      <AIRecommendationModals />
-    </div>
-  );
+    {/* AI Recommendation Modals */}
+    <AIRecommendationModals />
+
+    {/* What's New Modal */}
+    <WhatsNewModal />
+
+    {/* Cookie Consent Banner */}
+    <CookieConsentBanner />
+  </div>
+);
 }

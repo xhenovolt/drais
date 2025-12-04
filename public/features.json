@@ -1,0 +1,168 @@
+{
+  "version": "0.0.0018",
+  "lastUpdated": "2025-12-04",
+  "features": [
+    {
+      "id": "ai-copilot",
+      "title": "AI Copilot Dashboard",
+      "description": "Predictive analytics with 94% accuracy for student performance, attendance risks, and financial forecasting.",
+      "route": "/ai-copilot",
+      "tag": "NEW",
+      "category": "AI Features",
+      "icon": "Brain",
+      "dateAdded": "2025-12-04",
+      "highlights": [
+        "Student risk analysis with confidence scores",
+        "Automated fee collection predictions",
+        "Real-time decision insights",
+        "Resource allocation recommendations"
+      ]
+    },
+    {
+      "id": "ai-decision-insights",
+      "title": "AI Decision Insights",
+      "description": "Actionable recommendations for student interventions, resource allocation, and term predictions.",
+      "route": "/ai-copilot/insights",
+      "tag": "NEW",
+      "category": "AI Features",
+      "icon": "Lightbulb",
+      "dateAdded": "2025-12-04",
+      "highlights": [
+        "Student intervention plans with expected impact",
+        "Budget allocation suggestions",
+        "Class performance predictions",
+        "AI-generated recommendations"
+      ]
+    },
+    {
+      "id": "ai-recommendation-modals",
+      "title": "AI Alert System",
+      "description": "Floating AI alerts with priority-based notifications and recommended actions.",
+      "route": "/dashboard",
+      "tag": "NEW",
+      "category": "AI Features",
+      "icon": "BellRing",
+      "dateAdded": "2025-12-04",
+      "highlights": [
+        "High-priority alert auto-display",
+        "Confidence scores for each alert",
+        "Recommended actions per situation",
+        "Dismiss or acknowledge workflow"
+      ]
+    },
+    {
+      "id": "biometric-attendance",
+      "title": "Biometric Attendance",
+      "description": "Advanced fingerprint and face recognition for 99.8% accurate attendance tracking.",
+      "route": "/attendance/biometric",
+      "tag": "NEW",
+      "category": "Attendance",
+      "icon": "Fingerprint",
+      "dateAdded": "2025-12-04",
+      "highlights": [
+        "Fingerprint scanning simulation",
+        "Face ID recognition mode",
+        "0.4s average scan time",
+        "Real-time attendance updates",
+        "Eliminates proxy attendance"
+      ]
+    },
+    {
+      "id": "documentation-hub",
+      "title": "Documentation Hub",
+      "description": "Comprehensive guides for all DRAIS features with interactive examples and step-by-step workflows.",
+      "route": "/docs",
+      "tag": "NEW",
+      "category": "Resources",
+      "icon": "BookOpen",
+      "dateAdded": "2025-12-04",
+      "highlights": [
+        "28 detailed documentation guides",
+        "Searchable knowledge base",
+        "Beginner to advanced tutorials",
+        "Interactive 'Try in Demo' buttons",
+        "Best practices and pro tips"
+      ]
+    },
+    {
+      "id": "operations-dashboard",
+      "title": "Operations Dashboard",
+      "description": "Centralized view of school operations with key metrics and trend analysis.",
+      "route": "/operations/dashboard",
+      "tag": "Updated",
+      "category": "Reports",
+      "icon": "Activity",
+      "dateAdded": "2025-12-03",
+      "highlights": [
+        "6 key operational metrics",
+        "Fees vs expenses tracking",
+        "Attendance trend charts",
+        "Department distribution analysis"
+      ]
+    },
+    {
+      "id": "financial-reports",
+      "title": "Financial Reports",
+      "description": "Detailed income statements, expense breakdowns, and transaction logs.",
+      "route": "/reports/finance",
+      "tag": "Updated",
+      "category": "Reports",
+      "icon": "DollarSign",
+      "dateAdded": "2025-12-03",
+      "highlights": [
+        "Income vs expense charts",
+        "Transaction history table",
+        "Budget breakdown pie charts",
+        "Print-ready report modal"
+      ]
+    },
+    {
+      "id": "academic-reports",
+      "title": "Academic Reports",
+      "description": "Comprehensive academic performance analysis with subject and class breakdowns.",
+      "route": "/reports/academic",
+      "tag": "Updated",
+      "category": "Reports",
+      "icon": "GraduationCap",
+      "dateAdded": "2025-12-03",
+      "highlights": [
+        "Subject performance trends",
+        "Attendance by education level",
+        "Class performance table",
+        "Discipline case tracking"
+      ]
+    },
+    {
+      "id": "payment-processing",
+      "title": "Mobile Money Payments",
+      "description": "Integrated MTN and Airtel Money payment processing with auto-reconciliation.",
+      "route": "/payments",
+      "tag": "Core",
+      "category": "Financial",
+      "icon": "CreditCard",
+      "dateAdded": "2025-12-02",
+      "highlights": [
+        "MTN Mobile Money integration",
+        "Airtel Money support",
+        "Real-time payment processing",
+        "Auto-posting to student accounts"
+      ]
+    },
+    {
+      "id": "ai-teacher-assistant",
+      "title": "AI Teacher Assistant",
+      "description": "AI-powered teaching support with lesson plans and recommendations.",
+      "route": "/ai-teacher",
+      "tag": "Core",
+      "category": "AI Features",
+      "icon": "Bot",
+      "dateAdded": "2025-12-01",
+      "highlights": [
+        "Automated lesson plan generation",
+        "Student performance insights",
+        "Teaching recommendations",
+        "Resource suggestions"
+      ]
+    }
+  ]
+}
