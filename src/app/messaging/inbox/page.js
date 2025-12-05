@@ -2,10 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Link from 'next/link';
 import {
   MessageSquare, Send, Search, Plus, User, Users, Star, Archive,
   Trash2, MoreVertical, Paperclip, Smile, X, Check, CheckCheck,
-  Clock, Filter, ChevronLeft, Edit, Phone, Video, Info
+  Clock, Filter, ChevronLeft, Edit, Phone, Video, Info, Mail, Inbox
 } from 'lucide-react';
 
 export default function MessagingInboxPage() {
@@ -87,7 +88,7 @@ export default function MessagingInboxPage() {
 
   const stats = [
     { label: "Total Messages", value: "342", icon: Mail, color: "from-blue-500 to-purple-500" },
-    { label: "Unread", value: "47", icon: InboxIcon, color: "from-green-500 to-emerald-500" },
+    { label: "Unread", value: "47", icon: Inbox, color: "from-green-500 to-emerald-500" },
     { label: "Sent", value: "156", icon: Send, color: "from-amber-500 to-orange-500" },
     { label: "Archived", value: "139", icon: Clock, color: "from-gray-500 to-slate-500" },
   ];
@@ -127,10 +128,10 @@ export default function MessagingInboxPage() {
           </div>
         </div>
         <Link href="/messaging/compose">
-          <Button className="bg-gradient-to-r from-blue-600 to-purple-600">
-            <Send className="w-4 h-4 mr-2" />
+          <button className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:shadow-lg transition-all flex items-center gap-2">
+            <Send className="w-4 h-4" />
             Compose Message
-          </Button>
+          </button>
         </Link>
       </div>
 
@@ -143,40 +144,39 @@ export default function MessagingInboxPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.1 }}
           >
-            <Card className="hover:shadow-xl transition-all">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{stat.label}</p>
-                    <p className="text-3xl font-bold">{stat.value}</p>
-                  </div>
-                  <div className={`w-14 h-14 bg-gradient-to-br ${stat.color} rounded-xl flex items-center justify-center`}>
-                    <stat.icon className="w-7 h-7 text-white" />
-                  </div>
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-xl transition-all p-6 border border-gray-200 dark:border-gray-700">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{stat.label}</p>
+                  <p className="text-3xl font-bold text-gray-900 dark:text-white">{stat.value}</p>
                 </div>
-              </CardContent>
-            </Card>
+                <div className={`w-14 h-14 bg-gradient-to-br ${stat.color} rounded-xl flex items-center justify-center`}>
+                  <stat.icon className="w-7 h-7 text-white" />
+                </div>
+              </div>
+            </div>
           </motion.div>
         ))}
       </div>
 
       {/* Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700">
+        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             <Search className="w-5 h-5" />
             Search & Filter
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+          </h2>
+        </div>
+        <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <Input
+              <input
+                type="text"
                 placeholder="Search by sender or subject..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="w-full pl-10 px-3 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
               />
             </div>
             <select
@@ -191,16 +191,16 @@ export default function MessagingInboxPage() {
               ))}
             </select>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Messages List */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Messages ({filteredMessages.length})</CardTitle>
-          <CardDescription>Your inbox messages</CardDescription>
-        </CardHeader>
-        <CardContent>
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700">
+        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">Messages ({filteredMessages.length})</h2>
+          <p className="text-sm text-gray-600 dark:text-gray-400">Your inbox messages</p>
+        </div>
+        <div className="p-6">
           <div className="space-y-2">
             {filteredMessages.map((message, idx) => (
               <motion.div
@@ -215,15 +215,9 @@ export default function MessagingInboxPage() {
                 }`}
               >
                 <div className="flex items-start gap-4">
-                  <Avatar className="w-12 h-12 flex-shrink-0">
-                    <AvatarFallback className={`${
-                      message.status === "unread"
-                        ? "bg-gradient-to-br from-blue-500 to-purple-500 text-white"
-                        : "bg-gradient-to-br from-gray-400 to-gray-500 text-white"
-                    }`}>
-                      {message.sender.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                    </AvatarFallback>
-                  </Avatar>
+                  <div className="w-12 h-12 flex-shrink-0 rounded-full flex items-center justify-center text-white font-bold bg-gradient-to-br from-blue-500 to-purple-500">
+                    {message.sender.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                  </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2 mb-1">
                       <div className="flex items-center gap-2 flex-1">
@@ -231,7 +225,7 @@ export default function MessagingInboxPage() {
                           {message.sender}
                         </p>
                         {message.hasAttachment && (
-                          <Badge variant="outline" className="text-xs">📎</Badge>
+                          <span className="px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded-md">📎</span>
                         )}
                       </div>
                       <span className="text-sm text-gray-500 whitespace-nowrap">{message.date}</span>
@@ -243,29 +237,29 @@ export default function MessagingInboxPage() {
                       {message.preview}
                     </p>
                     <div className="flex items-center gap-2 mt-2">
-                      <Badge className={`text-xs ${
+                      <span className={`px-2 py-1 text-xs rounded-md ${
                         message.priority === "high" ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" :
                         message.priority === "low" ? "bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400" :
                         "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
                       }`}>
                         {message.priority}
-                      </Badge>
+                      </span>
                     </div>
                   </div>
                   <div className="flex flex-col gap-2">
-                    <Button size="sm" variant="ghost">
+                    <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
                       <Star className="w-4 h-4" />
-                    </Button>
-                    <Button size="sm" variant="ghost" className="text-red-600">
+                    </button>
+                    <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors text-red-600">
                       <Trash2 className="w-4 h-4" />
-                    </Button>
+                    </button>
                   </div>
                 </div>
               </motion.div>
             ))}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Footer */}
       <div className="text-center text-sm text-gray-500 dark:text-gray-400">

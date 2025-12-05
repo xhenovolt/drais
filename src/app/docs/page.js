@@ -6,7 +6,7 @@ import {
   Book, Search, Moon, Sun, ChevronDown, ChevronRight, Home, FileText,
   DollarSign, BookOpen, Bus, Users, GraduationCap, Award, Building,
   Calendar, MessageSquare, Settings, BarChart3, Shield, Zap, CheckCircle,
-  AlertCircle, Info, Play, Download, ExternalLink, Copy, Star
+  AlertCircle, Info, Play, Download, ExternalLink, Copy, Star, Target
 } from 'lucide-react';
 
 // Version 0.0.0039

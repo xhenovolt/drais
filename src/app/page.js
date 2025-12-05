@@ -139,6 +139,23 @@ export default function Home() {
                 DRAIS
               </span>
             </Link>
+            <div className="hidden md:flex items-center gap-6">
+              <Link href="/features" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors font-medium">
+                Features
+              </Link>
+              <Link href="/pricing-plans" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors font-medium">
+                Pricing
+              </Link>
+              <Link href="/documentation" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors font-medium">
+                Docs
+              </Link>
+              <Link href="/about-xhenvolt" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors font-medium">
+                About
+              </Link>
+              <Link href="/contact" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors font-medium">
+                Contact
+              </Link>
+            </div>
             <div className="flex items-center gap-4">
               <Button
                 variant="ghost"

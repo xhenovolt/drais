@@ -837,7 +837,7 @@ export default function SystemDocumentation() {
             '**Theme Customization**: School colors, branding, dark mode, logo placement',
             '**Backup & Security**: Automated backup schedules, password policies, session timeouts',
             '**Integration Settings**: Mobile money APIs, SMS gateway, email server configuration',
-            '**Report Templates': Customize report card layouts, certificate templates, letterheads'
+            '**Report Templates**: Customize report card layouts, certificate templates, letterheads'
           ],
           type: 'list'
         },

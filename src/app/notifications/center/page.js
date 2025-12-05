@@ -399,7 +399,7 @@ export default function NotificationCenter() {
                     className={`inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-${selectedNotif.color}-500 to-${selectedNotif.color}-600 hover:from-${selectedNotif.color}-600 hover:to-${selectedNotif.color}-700 text-white rounded-xl font-semibold transition-all`}
                   >
                     {selectedNotif.action.label}
-                  </button>
+                  </a>
                 )}
               </motion.div>
             </motion.div>

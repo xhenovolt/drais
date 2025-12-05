@@ -7,7 +7,7 @@ import {
   ArrowRight, Check, Star, TrendingUp, Shield, Clock, Users, DollarSign,
   BookOpen, Bus, Award, MessageSquare, BarChart3, Smartphone, Zap,
   Target, Heart, Brain, Globe, Lock, CheckCircle, ChevronRight,
-  Sparkles, TrendingDown, AlertCircle, Bell
+  Sparkles, TrendingDown, AlertCircle, Bell, Building
 } from 'lucide-react';
 
 // Version 0.0.0039 - DRAIS Marketing Landing Page

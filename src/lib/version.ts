@@ -1,4 +1,4 @@
-export const DRAIS_VERSION = "0.0.0039";
+export const DRAIS_VERSION = "0.0.0040";
 
 // Version increment rules:
 // 0.0.0001 → 0.0.0002 → ... → 0.0.9999 → 0.1.0001 → ... → 0.9.9999 → 1.0.0000 → 1.0.0001
