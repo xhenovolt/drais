@@ -57,7 +57,7 @@ SET FOREIGN_KEY_CHECKS = 1;
 -- Book Types Master Table
 -- --------------------------------------------------------
 CREATE TABLE `tahfiz_book_types` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `id` bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY,
   `code` varchar(50) NOT NULL COMMENT 'quran, yassarna, shatibiyyah, tuhfatul_atfaal, mutashabihat, etc',
   `name` varchar(100) NOT NULL,
   `description` text DEFAULT NULL,
@@ -68,16 +68,14 @@ CREATE TABLE `tahfiz_book_types` (
   `supports_abyat` tinyint(1) DEFAULT 0,
   `supports_topics` tinyint(1) DEFAULT 0,
   `requires_tajweed` tinyint(1) DEFAULT 1,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `code` (`code`)
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Master table for all book types (Quran, Yassarna, poems, etc)';
 
 -- --------------------------------------------------------
 -- Enhanced Books Table
 -- --------------------------------------------------------
 CREATE TABLE `tahfiz_books_enhanced` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `id` bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY,
   `school_id` bigint(20) NOT NULL,
   `book_type_id` bigint(20) NOT NULL,
   `title` varchar(200) NOT NULL,
@@ -93,34 +91,26 @@ CREATE TABLE `tahfiz_books_enhanced` (
   `is_active` tinyint(1) DEFAULT 1,
   `metadata_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`metadata_json`)) COMMENT 'Flexible storage for book-specific data',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  PRIMARY KEY (`id`),
-  KEY `school_id` (`school_id`),
-  KEY `book_type_id` (`book_type_id`),
-  CONSTRAINT `fk_books_school` FOREIGN KEY (`school_id`) REFERENCES `schools` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_books_type` FOREIGN KEY (`book_type_id`) REFERENCES `tahfiz_book_types` (`id`) ON DELETE CASCADE
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Enhanced books with full structural support';
 
 -- --------------------------------------------------------
 -- Book Structure Definitions (Generic Hierarchy)
 -- --------------------------------------------------------
 CREATE TABLE `tahfiz_book_structure_definitions` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `id` bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY,
   `book_id` bigint(20) NOT NULL,
   `structure_type` varchar(50) NOT NULL COMMENT 'surah, juz, hizb, quarter, page, paper, chapter, baab, topic, subtopic',
   `total_count` int(11) NOT NULL COMMENT 'Total number of this structure type in the book',
   `sequence_order` int(11) DEFAULT 0,
-  `metadata_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`metadata_json`)),
-  PRIMARY KEY (`id`),
-  KEY `book_id` (`book_id`),
-  CONSTRAINT `fk_structure_book` FOREIGN KEY (`book_id`) REFERENCES `tahfiz_books_enhanced` (`id`) ON DELETE CASCADE
+  `metadata_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`metadata_json`))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Defines what structural elements a book contains';
 
 -- --------------------------------------------------------
 -- Book Sections (Hierarchical Content Organization)
 -- --------------------------------------------------------
 CREATE TABLE `tahfiz_book_sections` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `id` bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY,
   `book_id` bigint(20) NOT NULL,
   `parent_section_id` bigint(20) DEFAULT NULL COMMENT 'For nested hierarchy (e.g., juz → surah → ayah)',
   `section_type` varchar(50) NOT NULL COMMENT 'surah, juz, hizb, quarter, page, paper, chapter, baab, topic, bait, ayah',
@@ -135,14 +125,7 @@ CREATE TABLE `tahfiz_book_sections` (
   `difficulty_level` enum('easy','medium','hard') DEFAULT 'medium',
   `estimated_study_minutes` int(11) DEFAULT NULL,
   `metadata_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`metadata_json`)),
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`),
-  KEY `book_id` (`book_id`),
-  KEY `parent_section_id` (`parent_section_id`),
-  KEY `section_type` (`section_type`),
-  KEY `section_number` (`section_number`),
-  CONSTRAINT `fk_section_book` FOREIGN KEY (`book_id`) REFERENCES `tahfiz_books_enhanced` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_section_parent` FOREIGN KEY (`parent_section_id`) REFERENCES `tahfiz_book_sections` (`id`) ON DELETE CASCADE
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Hierarchical content sections for any book type';
 
 -- =========================================
@@ -153,7 +136,7 @@ CREATE TABLE `tahfiz_book_sections` (
 -- Surah Master Map (114 Surahs)
 -- --------------------------------------------------------
 CREATE TABLE `tahfiz_book_surah_map` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `id` bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY,
   `book_id` bigint(20) NOT NULL COMMENT 'Links to Quran book record',
   `surah_number` tinyint(4) NOT NULL,
   `surah_name_arabic` varchar(100) NOT NULL,
@@ -165,18 +148,14 @@ CREATE TABLE `tahfiz_book_surah_map` (
   `end_page` smallint(6) DEFAULT NULL,
   `start_juz` tinyint(4) DEFAULT NULL,
   `end_juz` tinyint(4) DEFAULT NULL,
-  `sequence_order` tinyint(4) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `book_id` (`book_id`),
-  UNIQUE KEY `unique_surah_per_book` (`book_id`, `surah_number`),
-  CONSTRAINT `fk_surah_book` FOREIGN KEY (`book_id`) REFERENCES `tahfiz_books_enhanced` (`id`) ON DELETE CASCADE
+  `sequence_order` tinyint(4) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Surah metadata for Quran';
 
 -- --------------------------------------------------------
 -- Juz Map (30 Juz)
 -- --------------------------------------------------------
 CREATE TABLE `tahfiz_book_juz_map` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `id` bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY,
   `book_id` bigint(20) NOT NULL,
   `juz_number` tinyint(4) NOT NULL,
   `start_surah` tinyint(4) NOT NULL,
@@ -185,36 +164,28 @@ CREATE TABLE `tahfiz_book_juz_map` (
   `end_ayah` smallint(6) NOT NULL,
   `start_page` smallint(6) DEFAULT NULL,
   `end_page` smallint(6) DEFAULT NULL,
-  `total_ayat` int(11) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `book_id` (`book_id`),
-  UNIQUE KEY `unique_juz_per_book` (`book_id`, `juz_number`),
-  CONSTRAINT `fk_juz_book` FOREIGN KEY (`book_id`) REFERENCES `tahfiz_books_enhanced` (`id`) ON DELETE CASCADE
+  `total_ayat` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Juz divisions (30 parts of Quran)';
 
 -- --------------------------------------------------------
 -- Hizb Map (60 Hizb)
 -- --------------------------------------------------------
 CREATE TABLE `tahfiz_book_hizb_map` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `id` bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY,
   `book_id` bigint(20) NOT NULL,
   `hizb_number` tinyint(4) NOT NULL,
   `juz_number` tinyint(4) NOT NULL,
   `start_surah` tinyint(4) NOT NULL,
   `start_ayah` smallint(6) NOT NULL,
   `end_surah` tinyint(4) NOT NULL,
-  `end_ayah` smallint(6) NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `book_id` (`book_id`),
-  UNIQUE KEY `unique_hizb_per_book` (`book_id`, `hizb_number`),
-  CONSTRAINT `fk_hizb_book` FOREIGN KEY (`book_id`) REFERENCES `tahfiz_books_enhanced` (`id`) ON DELETE CASCADE
+  `end_ayah` smallint(6) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Hizb divisions (60 parts, 2 per juz)';
 
 -- --------------------------------------------------------
 -- Quarter Map (120 Quarters / Rub)
 -- --------------------------------------------------------
 CREATE TABLE `tahfiz_book_quarter_map` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `id` bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY,
   `book_id` bigint(20) NOT NULL,
   `quarter_number` smallint(6) NOT NULL,
   `hizb_number` tinyint(4) NOT NULL,
@@ -222,18 +193,14 @@ CREATE TABLE `tahfiz_book_quarter_map` (
   `start_surah` tinyint(4) NOT NULL,
   `start_ayah` smallint(6) NOT NULL,
   `end_surah` tinyint(4) NOT NULL,
-  `end_ayah` smallint(6) NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `book_id` (`book_id`),
-  UNIQUE KEY `unique_quarter_per_book` (`book_id`, `quarter_number`),
-  CONSTRAINT `fk_quarter_book` FOREIGN KEY (`book_id`) REFERENCES `tahfiz_books_enhanced` (`id`) ON DELETE CASCADE
+  `end_ayah` smallint(6) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Quarter divisions (120 parts, Rub al-Hizb)';
 
 -- --------------------------------------------------------
 -- Page Map (604 Pages, 302 Papers)
 -- --------------------------------------------------------
 CREATE TABLE `tahfiz_book_page_map` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `id` bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY,
   `book_id` bigint(20) NOT NULL,
   `page_number` smallint(6) NOT NULL,
   `paper_number` smallint(6) DEFAULT NULL COMMENT 'Physical paper (page_number / 2)',
@@ -243,19 +210,14 @@ CREATE TABLE `tahfiz_book_page_map` (
   `start_ayah` smallint(6) NOT NULL,
   `end_surah` tinyint(4) NOT NULL,
   `end_ayah` smallint(6) NOT NULL,
-  `total_ayat_on_page` tinyint(4) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `book_id` (`book_id`),
-  KEY `page_number` (`page_number`),
-  UNIQUE KEY `unique_page_per_book` (`book_id`, `page_number`),
-  CONSTRAINT `fk_page_book` FOREIGN KEY (`book_id`) REFERENCES `tahfiz_books_enhanced` (`id`) ON DELETE CASCADE
+  `total_ayat_on_page` tinyint(4) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Page-by-page mapping (604 pages)';
 
 -- --------------------------------------------------------
 -- Ayat Map (6236 Verses)
 -- --------------------------------------------------------
 CREATE TABLE `tahfiz_book_ayat_map` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `id` bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY,
   `book_id` bigint(20) NOT NULL,
   `surah_number` tinyint(4) NOT NULL,
   `ayah_number` smallint(6) NOT NULL,
@@ -269,13 +231,7 @@ CREATE TABLE `tahfiz_book_ayat_map` (
   `sajda_type` enum('recommended','obligatory') DEFAULT NULL,
   `sequence_in_quran` smallint(6) NOT NULL COMMENT 'Global ayah number (1-6236)',
   `word_count` tinyint(4) DEFAULT NULL,
-  `metadata_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`metadata_json`)) COMMENT 'Tajweed rules, recitation notes',
-  PRIMARY KEY (`id`),
-  KEY `book_id` (`book_id`),
-  KEY `surah_ayah` (`surah_number`, `ayah_number`),
-  KEY `page_number` (`page_number`),
-  UNIQUE KEY `unique_ayah_per_book` (`book_id`, `surah_number`, `ayah_number`),
-  CONSTRAINT `fk_ayat_book` FOREIGN KEY (`book_id`) REFERENCES `tahfiz_books_enhanced` (`id`) ON DELETE CASCADE
+  `metadata_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`metadata_json`)) COMMENT 'Tajweed rules, recitation notes'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Complete ayat repository (6236 verses)';
 
 -- =========================================
@@ -286,7 +242,7 @@ CREATE TABLE `tahfiz_book_ayat_map` (
 -- Enhanced Tahfiz Groups
 -- --------------------------------------------------------
 CREATE TABLE `tahfiz_groups_enhanced` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `id` bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY,
   `school_id` bigint(20) NOT NULL,
   `name` varchar(150) NOT NULL,
   `arabic_name` varchar(150) DEFAULT NULL,
@@ -301,39 +257,27 @@ CREATE TABLE `tahfiz_groups_enhanced` (
   `room_location` varchar(100) DEFAULT NULL,
   `is_active` tinyint(1) DEFAULT 1,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  PRIMARY KEY (`id`),
-  KEY `school_id` (`school_id`),
-  KEY `primary_teacher_id` (`primary_teacher_id`),
-  KEY `target_book_id` (`target_book_id`),
-  CONSTRAINT `fk_group_school` FOREIGN KEY (`school_id`) REFERENCES `schools` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_group_teacher` FOREIGN KEY (`primary_teacher_id`) REFERENCES `staff` (`id`) ON DELETE RESTRICT,
-  CONSTRAINT `fk_group_book` FOREIGN KEY (`target_book_id`) REFERENCES `tahfiz_books_enhanced` (`id`) ON DELETE SET NULL
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Enhanced Tahfiz study groups';
 
 -- --------------------------------------------------------
 -- Teacher Assignments (Multiple Teachers per Group)
 -- --------------------------------------------------------
 CREATE TABLE `tahfiz_teacher_assignments` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `id` bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY,
   `group_id` bigint(20) NOT NULL,
   `teacher_id` bigint(20) NOT NULL,
   `role` enum('primary','assistant','substitute','evaluator') DEFAULT 'assistant',
   `assigned_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `removed_at` timestamp NULL DEFAULT NULL,
-  `is_active` tinyint(1) DEFAULT 1,
-  PRIMARY KEY (`id`),
-  KEY `group_id` (`group_id`),
-  KEY `teacher_id` (`teacher_id`),
-  CONSTRAINT `fk_teacher_assign_group` FOREIGN KEY (`group_id`) REFERENCES `tahfiz_groups_enhanced` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_teacher_assign_staff` FOREIGN KEY (`teacher_id`) REFERENCES `staff` (`id`) ON DELETE CASCADE
+  `is_active` tinyint(1) DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Multiple teachers can be assigned to a group';
 
 -- --------------------------------------------------------
 -- Learner Enrollments (Student → Group → Book)
 -- --------------------------------------------------------
 CREATE TABLE `tahfiz_learner_enrollments` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `id` bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY,
   `student_id` bigint(20) NOT NULL,
   `group_id` bigint(20) NOT NULL,
   `book_id` bigint(20) NOT NULL,
@@ -342,41 +286,27 @@ CREATE TABLE `tahfiz_learner_enrollments` (
   `status` enum('active','withdrawn','completed','suspended') DEFAULT 'active',
   `withdrawal_reason` text DEFAULT NULL,
   `starting_level` varchar(100) DEFAULT NULL COMMENT 'E.g., "Juz 1", "Page 1", "Beginner"',
-  `target_completion_date` date DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `student_id` (`student_id`),
-  KEY `group_id` (`group_id`),
-  KEY `book_id` (`book_id`),
-  CONSTRAINT `fk_enrollment_student` FOREIGN KEY (`student_id`) REFERENCES `students` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_enrollment_group` FOREIGN KEY (`group_id`) REFERENCES `tahfiz_groups_enhanced` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_enrollment_book` FOREIGN KEY (`book_id`) REFERENCES `tahfiz_books_enhanced` (`id`) ON DELETE CASCADE
+  `target_completion_date` date DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Student enrollment in Tahfiz groups and books';
 
 -- --------------------------------------------------------
 -- Group Transfer History
 -- --------------------------------------------------------
 CREATE TABLE `tahfiz_group_transfers` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `id` bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY,
   `student_id` bigint(20) NOT NULL,
   `from_group_id` bigint(20) DEFAULT NULL,
   `to_group_id` bigint(20) NOT NULL,
   `transfer_reason` varchar(255) DEFAULT NULL,
   `transferred_by` bigint(20) DEFAULT NULL COMMENT 'User/staff who initiated transfer',
-  `transferred_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`),
-  KEY `student_id` (`student_id`),
-  KEY `from_group_id` (`from_group_id`),
-  KEY `to_group_id` (`to_group_id`),
-  CONSTRAINT `fk_transfer_student` FOREIGN KEY (`student_id`) REFERENCES `students` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_transfer_from_group` FOREIGN KEY (`from_group_id`) REFERENCES `tahfiz_groups_enhanced` (`id`) ON DELETE SET NULL,
-  CONSTRAINT `fk_transfer_to_group` FOREIGN KEY (`to_group_id`) REFERENCES `tahfiz_groups_enhanced` (`id`) ON DELETE CASCADE
+  `transferred_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Track group transfers for students';
 
 -- --------------------------------------------------------
 -- Learner Progress Master (One record per student per book)
 -- --------------------------------------------------------
 CREATE TABLE `tahfiz_learner_progress` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `id` bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY,
   `student_id` bigint(20) NOT NULL,
   `book_id` bigint(20) NOT NULL,
   `enrollment_id` bigint(20) DEFAULT NULL,
@@ -399,24 +329,14 @@ CREATE TABLE `tahfiz_learner_progress` (
   `last_recitation_date` date DEFAULT NULL,
   `last_revision_date` date DEFAULT NULL,
   `notes` text DEFAULT NULL,
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  PRIMARY KEY (`id`),
-  KEY `student_id` (`student_id`),
-  KEY `book_id` (`book_id`),
-  KEY `enrollment_id` (`enrollment_id`),
-  KEY `current_section_id` (`current_section_id`),
-  UNIQUE KEY `unique_student_book_progress` (`student_id`, `book_id`),
-  CONSTRAINT `fk_progress_student` FOREIGN KEY (`student_id`) REFERENCES `students` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_progress_book` FOREIGN KEY (`book_id`) REFERENCES `tahfiz_books_enhanced` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_progress_enrollment` FOREIGN KEY (`enrollment_id`) REFERENCES `tahfiz_learner_enrollments` (`id`) ON DELETE SET NULL,
-  CONSTRAINT `fk_progress_section` FOREIGN KEY (`current_section_id`) REFERENCES `tahfiz_book_sections` (`id`) ON DELETE SET NULL
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Master progress tracking per student per book';
 
 -- --------------------------------------------------------
 -- Portion Assignments (Teacher assigns next portion)
 -- --------------------------------------------------------
 CREATE TABLE `tahfiz_portion_assignments` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `id` bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY,
   `student_id` bigint(20) NOT NULL,
   `book_id` bigint(20) NOT NULL,
   `section_id` bigint(20) DEFAULT NULL COMMENT 'Links to tahfiz_book_sections',
@@ -429,23 +349,14 @@ CREATE TABLE `tahfiz_portion_assignments` (
   `status` enum('assigned','in_progress','completed','skipped','pending_evaluation') DEFAULT 'assigned',
   `teacher_notes` text DEFAULT NULL,
   `completed_at` timestamp NULL DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`),
-  KEY `student_id` (`student_id`),
-  KEY `book_id` (`book_id`),
-  KEY `section_id` (`section_id`),
-  KEY `assigned_by_teacher_id` (`assigned_by_teacher_id`),
-  CONSTRAINT `fk_portion_student` FOREIGN KEY (`student_id`) REFERENCES `students` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_portion_book` FOREIGN KEY (`book_id`) REFERENCES `tahfiz_books_enhanced` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_portion_section` FOREIGN KEY (`section_id`) REFERENCES `tahfiz_book_sections` (`id`) ON DELETE SET NULL,
-  CONSTRAINT `fk_portion_teacher` FOREIGN KEY (`assigned_by_teacher_id`) REFERENCES `staff` (`id`) ON DELETE CASCADE
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Teacher assigns portions to students';
 
 -- --------------------------------------------------------
 -- Daily Recitation Submissions (Student reads to teacher)
 -- --------------------------------------------------------
 CREATE TABLE `tahfiz_recitation_submissions` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `id` bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY,
   `student_id` bigint(20) NOT NULL,
   `assignment_id` bigint(20) DEFAULT NULL,
   `book_id` bigint(20) NOT NULL,
@@ -464,24 +375,14 @@ CREATE TABLE `tahfiz_recitation_submissions` (
   `teacher_feedback` text DEFAULT NULL,
   `audio_recording_url` varchar(255) DEFAULT NULL COMMENT 'Optional audio file',
   `approved_at` timestamp NULL DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`),
-  KEY `student_id` (`student_id`),
-  KEY `assignment_id` (`assignment_id`),
-  KEY `book_id` (`book_id`),
-  KEY `teacher_id` (`teacher_id`),
-  KEY `recitation_date` (`recitation_date`),
-  CONSTRAINT `fk_recitation_student` FOREIGN KEY (`student_id`) REFERENCES `students` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_recitation_assignment` FOREIGN KEY (`assignment_id`) REFERENCES `tahfiz_portion_assignments` (`id`) ON DELETE SET NULL,
-  CONSTRAINT `fk_recitation_book` FOREIGN KEY (`book_id`) REFERENCES `tahfiz_books_enhanced` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_recitation_teacher` FOREIGN KEY (`teacher_id`) REFERENCES `staff` (`id`) ON DELETE CASCADE
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Daily recitation records with scores';
 
 -- --------------------------------------------------------
 -- Mistake Logs (Detailed error tracking)
 -- --------------------------------------------------------
 CREATE TABLE `tahfiz_mistake_logs` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `id` bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY,
   `recitation_id` bigint(20) NOT NULL,
   `student_id` bigint(20) NOT NULL,
   `book_id` bigint(20) NOT NULL,
@@ -494,23 +395,14 @@ CREATE TABLE `tahfiz_mistake_logs` (
   `severity` enum('minor','moderate','major','critical') DEFAULT 'minor',
   `recurring_mistake` tinyint(1) DEFAULT 0 COMMENT 'Flag if student makes this mistake repeatedly',
   `logged_by_teacher_id` bigint(20) NOT NULL,
-  `logged_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`),
-  KEY `recitation_id` (`recitation_id`),
-  KEY `student_id` (`student_id`),
-  KEY `book_id` (`book_id`),
-  KEY `logged_by_teacher_id` (`logged_by_teacher_id`),
-  CONSTRAINT `fk_mistake_recitation` FOREIGN KEY (`recitation_id`) REFERENCES `tahfiz_recitation_submissions` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_mistake_student` FOREIGN KEY (`student_id`) REFERENCES `students` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_mistake_book` FOREIGN KEY (`book_id`) REFERENCES `tahfiz_books_enhanced` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_mistake_teacher` FOREIGN KEY (`logged_by_teacher_id`) REFERENCES `staff` (`id`) ON DELETE CASCADE
+  `logged_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Detailed mistake tracking per recitation';
 
 -- --------------------------------------------------------
 -- Daily Light Revisions (Juzu Darus)
 -- --------------------------------------------------------
 CREATE TABLE `tahfiz_daily_revisions` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `id` bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY,
   `student_id` bigint(20) NOT NULL,
   `book_id` bigint(20) NOT NULL,
   `revision_date` date NOT NULL,
@@ -523,22 +415,14 @@ CREATE TABLE `tahfiz_daily_revisions` (
   `mistakes_count` int(11) DEFAULT 0,
   `duration_minutes` int(11) DEFAULT NULL,
   `notes` text DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`),
-  KEY `student_id` (`student_id`),
-  KEY `book_id` (`book_id`),
-  KEY `revision_date` (`revision_date`),
-  KEY `teacher_id` (`teacher_id`),
-  CONSTRAINT `fk_daily_revision_student` FOREIGN KEY (`student_id`) REFERENCES `students` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_daily_revision_book` FOREIGN KEY (`book_id`) REFERENCES `tahfiz_books_enhanced` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_daily_revision_teacher` FOREIGN KEY (`teacher_id`) REFERENCES `staff` (`id`) ON DELETE SET NULL
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Daily light revision tracking (Juzu Darus)';
 
 -- --------------------------------------------------------
 -- Intensive Revisions (Muraaja - Scheduled deep review)
 -- --------------------------------------------------------
 CREATE TABLE `tahfiz_intensive_revisions` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `id` bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY,
   `student_id` bigint(20) NOT NULL,
   `book_id` bigint(20) NOT NULL,
   `revision_schedule_date` date NOT NULL,
@@ -554,43 +438,28 @@ CREATE TABLE `tahfiz_intensive_revisions` (
   `teacher_evaluation` text DEFAULT NULL,
   `next_revision_date` date DEFAULT NULL COMMENT 'When next Muraaja should happen',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `completed_at` timestamp NULL DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `student_id` (`student_id`),
-  KEY `book_id` (`book_id`),
-  KEY `teacher_id` (`teacher_id`),
-  KEY `revision_schedule_date` (`revision_schedule_date`),
-  CONSTRAINT `fk_intensive_revision_student` FOREIGN KEY (`student_id`) REFERENCES `students` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_intensive_revision_book` FOREIGN KEY (`book_id`) REFERENCES `tahfiz_books_enhanced` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_intensive_revision_teacher` FOREIGN KEY (`teacher_id`) REFERENCES `staff` (`id`) ON DELETE CASCADE
+  `completed_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Scheduled intensive revision (Muraaja)';
 
 -- --------------------------------------------------------
 -- Lesson Revisions (Links revision to specific lessons)
 -- --------------------------------------------------------
 CREATE TABLE `tahfiz_lesson_revisions` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `id` bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY,
   `intensive_revision_id` bigint(20) NOT NULL,
   `original_recitation_id` bigint(20) DEFAULT NULL COMMENT 'Links back to when this was first learned',
   `section_id` bigint(20) DEFAULT NULL,
   `portion_text` varchar(255) NOT NULL,
   `revision_quality` enum('excellent','good','fair','needs_work') DEFAULT 'good',
   `mistakes_count` int(11) DEFAULT 0,
-  `notes` text DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `intensive_revision_id` (`intensive_revision_id`),
-  KEY `original_recitation_id` (`original_recitation_id`),
-  KEY `section_id` (`section_id`),
-  CONSTRAINT `fk_lesson_revision_intensive` FOREIGN KEY (`intensive_revision_id`) REFERENCES `tahfiz_intensive_revisions` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_lesson_revision_recitation` FOREIGN KEY (`original_recitation_id`) REFERENCES `tahfiz_recitation_submissions` (`id`) ON DELETE SET NULL,
-  CONSTRAINT `fk_lesson_revision_section` FOREIGN KEY (`section_id`) REFERENCES `tahfiz_book_sections` (`id`) ON DELETE SET NULL
+  `notes` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Individual lesson tracking within intensive revisions';
 
 -- --------------------------------------------------------
 -- Evaluation Reports (Periodic assessments)
 -- --------------------------------------------------------
 CREATE TABLE `tahfiz_evaluation_reports` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `id` bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY,
   `student_id` bigint(20) NOT NULL,
   `book_id` bigint(20) NOT NULL,
   `evaluator_id` bigint(20) NOT NULL,
@@ -611,24 +480,14 @@ CREATE TABLE `tahfiz_evaluation_reports` (
   `recommendations` text DEFAULT NULL,
   `evaluator_comments` text DEFAULT NULL,
   `parent_notified` tinyint(1) DEFAULT 0,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`),
-  KEY `student_id` (`student_id`),
-  KEY `book_id` (`book_id`),
-  KEY `evaluator_id` (`evaluator_id`),
-  KEY `term_id` (`term_id`),
-  KEY `evaluation_date` (`evaluation_date`),
-  CONSTRAINT `fk_eval_student` FOREIGN KEY (`student_id`) REFERENCES `students` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_eval_book` FOREIGN KEY (`book_id`) REFERENCES `tahfiz_books_enhanced` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_eval_evaluator` FOREIGN KEY (`evaluator_id`) REFERENCES `staff` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_eval_term` FOREIGN KEY (`term_id`) REFERENCES `terms` (`id`) ON DELETE SET NULL
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Periodic evaluation reports';
 
 -- --------------------------------------------------------
 -- Mastery Validations (Verification before moving forward)
 -- --------------------------------------------------------
 CREATE TABLE `tahfiz_mastery_validations` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `id` bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY,
   `student_id` bigint(20) NOT NULL,
   `book_id` bigint(20) NOT NULL,
   `section_id` bigint(20) NOT NULL COMMENT 'Section being validated (e.g., Juz 1)',
@@ -644,23 +503,14 @@ CREATE TABLE `tahfiz_mastery_validations` (
   `revalidation_required` tinyint(1) DEFAULT 0,
   `revalidation_date` date DEFAULT NULL,
   `certification_eligible` tinyint(1) DEFAULT 0 COMMENT 'Ready for certificate?',
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`),
-  KEY `student_id` (`student_id`),
-  KEY `book_id` (`book_id`),
-  KEY `section_id` (`section_id`),
-  KEY `validator_id` (`validator_id`),
-  CONSTRAINT `fk_validation_student` FOREIGN KEY (`student_id`) REFERENCES `students` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_validation_book` FOREIGN KEY (`book_id`) REFERENCES `tahfiz_books_enhanced` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_validation_section` FOREIGN KEY (`section_id`) REFERENCES `tahfiz_book_sections` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_validation_validator` FOREIGN KEY (`validator_id`) REFERENCES `staff` (`id`) ON DELETE CASCADE
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Formal mastery validation tests';
 
 -- --------------------------------------------------------
 -- Completion Certificates
 -- --------------------------------------------------------
 CREATE TABLE `tahfiz_completion_certificates` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `id` bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY,
   `student_id` bigint(20) NOT NULL,
   `book_id` bigint(20) NOT NULL,
   `certificate_type` enum('section_completion','juz_completion','book_completion','hafidh_certification','ijazah') DEFAULT 'book_completion',
@@ -677,22 +527,14 @@ CREATE TABLE `tahfiz_completion_certificates` (
   `is_revoked` tinyint(1) DEFAULT 0,
   `revoked_at` timestamp NULL DEFAULT NULL,
   `revoke_reason` text DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `certificate_number` (`certificate_number`),
-  KEY `student_id` (`student_id`),
-  KEY `book_id` (`book_id`),
-  KEY `issued_by_id` (`issued_by_id`),
-  CONSTRAINT `fk_cert_student` FOREIGN KEY (`student_id`) REFERENCES `students` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_cert_book` FOREIGN KEY (`book_id`) REFERENCES `tahfiz_books_enhanced` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_cert_issuer` FOREIGN KEY (`issued_by_id`) REFERENCES `staff` (`id`) ON DELETE CASCADE
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Completion certificates and Hafidh status';
 
 -- --------------------------------------------------------
 -- Enhanced Attendance (Integrates with existing attendance)
 -- --------------------------------------------------------
 CREATE TABLE `tahfiz_attendance_enhanced` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `id` bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY,
   `student_id` bigint(20) NOT NULL,
   `group_id` bigint(20) NOT NULL,
   `attendance_date` date NOT NULL,
@@ -703,32 +545,15 @@ CREATE TABLE `tahfiz_attendance_enhanced` (
   `reason_for_absence` text DEFAULT NULL,
   `notes` text DEFAULT NULL,
   `recorded_by_teacher_id` bigint(20) DEFAULT NULL,
-  `recorded_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`),
-  KEY `student_id` (`student_id`),
-  KEY `group_id` (`group_id`),
-  KEY `attendance_date` (`attendance_date`),
-  UNIQUE KEY `unique_attendance_per_day` (`student_id`, `group_id`, `attendance_date`),
-  CONSTRAINT `fk_attendance_student` FOREIGN KEY (`student_id`) REFERENCES `students` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_attendance_group` FOREIGN KEY (`group_id`) REFERENCES `tahfiz_groups_enhanced` (`id`) ON DELETE CASCADE
+  `recorded_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Enhanced Tahfiz attendance with recitation status';
 
 -- =========================================
--- INDEXES FOR OPTIMIZATION
 -- =========================================
 
 -- Performance indexes for frequent queries
-CREATE INDEX idx_student_book_progress ON tahfiz_learner_progress(student_id, book_id, status);
-CREATE INDEX idx_recitation_date_student ON tahfiz_recitation_submissions(recitation_date, student_id);
-CREATE INDEX idx_mistake_student_recurring ON tahfiz_mistake_logs(student_id, recurring_mistake);
-CREATE INDEX idx_revision_schedule ON tahfiz_intensive_revisions(revision_schedule_date, status);
-CREATE INDEX idx_enrollment_active ON tahfiz_learner_enrollments(student_id, status);
-CREATE INDEX idx_ayat_lookup ON tahfiz_book_ayat_map(book_id, surah_number, ayah_number);
-CREATE INDEX idx_page_lookup ON tahfiz_book_page_map(book_id, page_number);
-CREATE INDEX idx_section_hierarchy ON tahfiz_book_sections(book_id, parent_section_id, section_type);
 
 -- =========================================
--- RE-ENABLE FOREIGN KEY CHECKS
 -- =========================================
 SET FOREIGN_KEY_CHECKS = 1;
 
@@ -748,3 +573,36 @@ COMMIT;
 -- Total Indexes: 80+
 -- Supports: Quran (6236 ayat), Yassarna, Shatibiyyah, and custom books
 -- =========================================
+
+-- =========================================
+-- TAHFIZ TABLES FROM SCHOOL.SQL
+-- Moved for better organization
+-- =========================================
+
+-- --------------------------------------------------------
+
+
+-- --------------------------------------------------------
+
+
+-- --------------------------------------------------------
+
+
+-- --------------------------------------------------------
+
+
+-- --------------------------------------------------------
+
+
+-- --------------------------------------------------------
+
+
+-- --------------------------------------------------------
+
+
+-- --------------------------------------------------------
+
+
+-- --------------------------------------------------------
+
+

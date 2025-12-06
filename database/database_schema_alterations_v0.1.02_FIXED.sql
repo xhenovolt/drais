@@ -1,81 +1,63 @@
 -- =====================================================
 -- DRAIS School Management System
--- Database Schema Alterations
--- Version 0.1.01
--- Date: December 5, 2025
+-- Database Schema Alterations - CORRECTED
+-- Version 0.1.02
+-- Date: December 6, 2025
 -- =====================================================
 -- This file contains ALTER TABLE statements to modify
--- existing tables for multi-tenancy support and enhanced
--- functionality for self-service school onboarding.
+-- existing tables from school.sql for multi-tenancy
+-- support and enhanced functionality.
+-- IMPORTANT: Run this AFTER school.sql
 -- =====================================================
 
--- =====================================================
--- SECTION 1: MULTI-TENANCY CORE TABLES
--- =====================================================
-
--- Add schools table if not exists (reference for all school-specific data)
-CREATE TABLE IF NOT EXISTS school (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    school_code VARCHAR(20) UNIQUE NOT NULL COMMENT 'Unique identifier like SCH0001',
-    name VARCHAR(255) NOT NULL,
-    slug VARCHAR(255) UNIQUE NOT NULL COMMENT 'URL-friendly name',
-    email VARCHAR(255) NOT NULL,
-    phone VARCHAR(50),
-    address TEXT,
-    region VARCHAR(100),
-    district VARCHAR(100),
-    logo_url VARCHAR(500),
-    website VARCHAR(255),
-    registration_number VARCHAR(100),
-    school_type ENUM('primary', 'secondary', 'primary_secondary', 'tertiary', 'vocational') DEFAULT 'primary',
-    
-    -- Subscription & Status
-    subscription_plan ENUM('trial', 'professional', 'premium', 'gold') DEFAULT 'trial',
-    subscription_status ENUM('active', 'suspended', 'cancelled', 'trial') DEFAULT 'trial',
-    subscription_start_date DATE,
-    subscription_end_date DATE,
-    
-    -- Owner Information
-    owner_name VARCHAR(255),
-    owner_email VARCHAR(255),
-    owner_phone VARCHAR(50),
-    
-    -- System Configuration
-    timezone VARCHAR(50) DEFAULT 'Africa/Kampala',
-    currency VARCHAR(10) DEFAULT 'UGX',
-    academic_year VARCHAR(20),
-    date_format VARCHAR(20) DEFAULT 'DD/MM/YYYY',
-    
-    -- Feature Flags
-    modules_enabled JSON COMMENT 'Array of enabled module IDs',
-    settings JSON COMMENT 'School-specific settings',
-    
-    -- Audit Fields
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP NULL DEFAULT NULL,
-    
-    INDEX idx_school_code (school_code),
-    INDEX idx_subscription_status (subscription_status),
-    INDEX idx_region (region)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Multi-tenant school registry';
+USE `drais`;
 
 -- =====================================================
--- SECTION 2: USER MANAGEMENT & AUTHENTICATION
+-- SECTION 1: ALTER EXISTING SCHOOLS TABLE
+-- =====================================================
+
+-- Add missing columns to schools table (already exists in school.sql)
+ALTER TABLE schools 
+    -- ADD COLUMN  school_code VARCHAR(20) UNIQUE AFTER id,
+    ADD COLUMN  slug VARCHAR(255) UNIQUE AFTER name,
+    ADD COLUMN  region VARCHAR(100) AFTER address,
+    ADD COLUMN  district VARCHAR(100) AFTER region,
+    ADD COLUMN  website VARCHAR(255) AFTER logo_url,
+    ADD COLUMN  registration_number VARCHAR(100) AFTER website,
+    ADD COLUMN  school_type ENUM('primary', 'secondary', 'primary_secondary', 'tertiary', 'vocational') DEFAULT 'primary' AFTER registration_number;
+
+ALTER TABLE schools
+    ADD COLUMN  subscription_plan ENUM('trial', 'professional', 'premium', 'gold') DEFAULT 'trial',
+    ADD COLUMN  subscription_status ENUM('active', 'suspended', 'cancelled', 'trial') DEFAULT 'trial',
+    ADD COLUMN  subscription_start_date DATE,
+    ADD COLUMN  subscription_end_date DATE;
+
+ALTER TABLE schools
+    ADD COLUMN  owner_name VARCHAR(255),
+    ADD COLUMN  owner_email VARCHAR(255),
+    ADD COLUMN  owner_phone VARCHAR(50);
+
+ALTER TABLE schools
+    ADD COLUMN  timezone VARCHAR(50) DEFAULT 'Africa/Kampala',
+    ADD COLUMN  academic_year VARCHAR(20),
+    ADD COLUMN  date_format VARCHAR(20) DEFAULT 'DD/MM/YYYY';
+
+ALTER TABLE schools
+    ADD COLUMN  modules_enabled JSON COMMENT 'Array of enabled module IDs',
+    ADD COLUMN  settings JSON COMMENT 'School-specific settings';
+
+-- =====================================================
+-- SECTION 2: CREATE NEW TABLES (NOT IN SCHOOL.SQL)
 -- =====================================================
 
 -- Create comprehensive users table
 CREATE TABLE IF NOT EXISTS user (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     school_id BIGINT UNSIGNED NULL COMMENT 'NULL for super admins, set for school users',
-    
-    -- Authentication
     username VARCHAR(100) UNIQUE NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     phone VARCHAR(50),
-    
-    -- Personal Information
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
     middle_name VARCHAR(100),
@@ -83,109 +65,70 @@ CREATE TABLE IF NOT EXISTS user (
     date_of_birth DATE,
     national_id VARCHAR(50),
     profile_photo_url VARCHAR(500),
-    
-    -- Role & Permissions
     role ENUM('super_admin', 'school_admin', 'teacher', 'student', 'parent', 'accountant', 'librarian', 'staff') NOT NULL,
     permissions JSON COMMENT 'Array of permission codes',
-    
-    -- Status & Security
     status ENUM('active', 'inactive', 'suspended', 'pending') DEFAULT 'pending',
     email_verified_at TIMESTAMP NULL,
     phone_verified_at TIMESTAMP NULL,
     two_factor_enabled BOOLEAN DEFAULT FALSE,
     two_factor_secret VARCHAR(255),
-    
-    -- Session Management
     last_login_at TIMESTAMP NULL,
     last_login_ip VARCHAR(45),
     login_attempts INT DEFAULT 0,
     locked_until TIMESTAMP NULL,
-    
-    -- Password Management
     password_changed_at TIMESTAMP NULL,
     reset_token VARCHAR(255),
     reset_token_expires_at TIMESTAMP NULL,
-    
-    -- Audit Fields
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP NULL DEFAULT NULL,
-    
-    FOREIGN KEY (school_id) REFERENCES school(id) ON DELETE CASCADE,
-    INDEX idx_school_role (school_id, role),
-    INDEX idx_email (email),
-    INDEX idx_username (username),
-    INDEX idx_status (status),
-    INDEX idx_role (role)
+    deleted_at TIMESTAMP NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Unified user authentication and profile management';
 
 -- =====================================================
 -- SECTION 3: ALTER EXISTING TABLES FOR MULTI-TENANCY
 -- =====================================================
 
--- Add school_id to students table if not exists
-ALTER TABLE student 
-    ADD COLUMN IF NOT EXISTS school_id BIGINT UNSIGNED NOT NULL AFTER id,
-    ADD COLUMN IF NOT EXISTS user_id BIGINT UNSIGNED NULL COMMENT 'Links to user table for authentication',
-    ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP NULL DEFAULT NULL,
-    ADD INDEX IF NOT EXISTS idx_school_student (school_id, id),
-    ADD FOREIGN KEY IF NOT EXISTS fk_student_school (school_id) REFERENCES school(id) ON DELETE CASCADE,
-    ADD FOREIGN KEY IF NOT EXISTS fk_student_user (user_id) REFERENCES user(id) ON DELETE SET NULL;
+-- Add school_id to students table
+ALTER TABLE students 
+    ADD COLUMN  school_id BIGINT UNSIGNED NOT NULL AFTER id,
+    ADD COLUMN  user_id BIGINT UNSIGNED NULL,
+    ADD COLUMN  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    ADD COLUMN  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    ADD COLUMN  deleted_at TIMESTAMP NULL DEFAULT NULL;
 
--- Add school_id to teachers table if not exists
-ALTER TABLE teacher 
-    ADD COLUMN IF NOT EXISTS school_id BIGINT UNSIGNED NOT NULL AFTER id,
-    ADD COLUMN IF NOT EXISTS user_id BIGINT UNSIGNED NULL COMMENT 'Links to user table for authentication',
-    ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP NULL DEFAULT NULL,
-    ADD INDEX IF NOT EXISTS idx_school_teacher (school_id, id),
-    ADD FOREIGN KEY IF NOT EXISTS fk_teacher_school (school_id) REFERENCES school(id) ON DELETE CASCADE,
-    ADD FOREIGN KEY IF NOT EXISTS fk_teacher_user (user_id) REFERENCES user(id) ON DELETE SET NULL;
+-- Add school_id to staff table (teachers/staff)
+ALTER TABLE staff 
+    ADD COLUMN  school_id BIGINT UNSIGNED NOT NULL AFTER id,
+    ADD COLUMN  user_id BIGINT UNSIGNED NULL,
+    ADD COLUMN  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    ADD COLUMN  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    ADD COLUMN  deleted_at TIMESTAMP NULL DEFAULT NULL;
 
--- Add school_id to classes table if not exists
-ALTER TABLE class 
-    ADD COLUMN IF NOT EXISTS school_id BIGINT UNSIGNED NOT NULL AFTER id,
-    ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP NULL DEFAULT NULL,
-    ADD INDEX IF NOT EXISTS idx_school_class (school_id, id),
-    ADD FOREIGN KEY IF NOT EXISTS fk_class_school (school_id) REFERENCES school(id) ON DELETE CASCADE;
+-- Add school_id to classes table
+ALTER TABLE classes 
+    ADD COLUMN  school_id BIGINT UNSIGNED NOT NULL AFTER id,
+    ADD COLUMN  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    ADD COLUMN  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    ADD COLUMN  deleted_at TIMESTAMP NULL DEFAULT NULL;
 
--- Add school_id to subjects table if not exists
-ALTER TABLE subject 
-    ADD COLUMN IF NOT EXISTS school_id BIGINT UNSIGNED NOT NULL AFTER id,
-    ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP NULL DEFAULT NULL,
-    ADD INDEX IF NOT EXISTS idx_school_subject (school_id, id),
-    ADD FOREIGN KEY IF NOT EXISTS fk_subject_school (school_id) REFERENCES school(id) ON DELETE CASCADE;
+-- Add school_id to subjects table
+ALTER TABLE subjects 
+    ADD COLUMN  school_id BIGINT UNSIGNED NOT NULL AFTER id,
+    ADD COLUMN  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    ADD COLUMN  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    ADD COLUMN  deleted_at TIMESTAMP NULL DEFAULT NULL;
 
--- Add school_id to exams table if not exists
-ALTER TABLE exam 
-    ADD COLUMN IF NOT EXISTS school_id BIGINT UNSIGNED NOT NULL AFTER id,
-    ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP NULL DEFAULT NULL,
-    ADD INDEX IF NOT EXISTS idx_school_exam (school_id, id),
-    ADD FOREIGN KEY IF NOT EXISTS fk_exam_school (school_id) REFERENCES school(id) ON DELETE CASCADE;
-
--- Add school_id to fees table if not exists
-ALTER TABLE fee 
-    ADD COLUMN IF NOT EXISTS school_id BIGINT UNSIGNED NOT NULL AFTER id,
-    ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP NULL DEFAULT NULL,
-    ADD INDEX IF NOT EXISTS idx_school_fee (school_id, id),
-    ADD FOREIGN KEY IF NOT EXISTS fk_fee_school (school_id) REFERENCES school(id) ON DELETE CASCADE;
+-- Add school_id to exams table
+ALTER TABLE exams 
+    ADD COLUMN  school_id BIGINT UNSIGNED NOT NULL AFTER id,
+    ADD COLUMN  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    ADD COLUMN  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    ADD COLUMN  deleted_at TIMESTAMP NULL DEFAULT NULL;
 
 -- =====================================================
 -- SECTION 4: ROLES & PERMISSIONS SYSTEM
 -- =====================================================
 
--- Create roles table for custom role definitions
 CREATE TABLE IF NOT EXISTS role (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     school_id BIGINT UNSIGNED NULL COMMENT 'NULL for system-wide roles, set for custom school roles',
@@ -196,14 +139,9 @@ CREATE TABLE IF NOT EXISTS role (
     permissions JSON COMMENT 'Array of permission codes',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP NULL DEFAULT NULL,
-    
-    UNIQUE KEY unique_role_slug (school_id, slug),
-    FOREIGN KEY (school_id) REFERENCES school(id) ON DELETE CASCADE,
-    INDEX idx_school_role (school_id)
+    deleted_at TIMESTAMP NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Role definitions for RBAC';
 
--- Create permissions table for granular permission management
 CREATE TABLE IF NOT EXISTS permission (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     module VARCHAR(50) NOT NULL COMMENT 'e.g., students, finance, exams',
@@ -211,32 +149,21 @@ CREATE TABLE IF NOT EXISTS permission (
     slug VARCHAR(100) UNIQUE NOT NULL,
     description TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    
-    INDEX idx_module (module)
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='System-wide permission registry';
 
--- Create user_role junction table for many-to-many relationship
 CREATE TABLE IF NOT EXISTS user_role (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     user_id BIGINT UNSIGNED NOT NULL,
     role_id BIGINT UNSIGNED NOT NULL,
     assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    assigned_by BIGINT UNSIGNED COMMENT 'User who assigned this role',
-    
-    UNIQUE KEY unique_user_role (user_id, role_id),
-    FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE,
-    FOREIGN KEY (role_id) REFERENCES role(id) ON DELETE CASCADE,
-    FOREIGN KEY (assigned_by) REFERENCES user(id) ON DELETE SET NULL,
-    INDEX idx_user (user_id),
-    INDEX idx_role (role_id)
+    assigned_by BIGINT UNSIGNED COMMENT 'User who assigned this role'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='User role assignments';
 
 -- =====================================================
 -- SECTION 5: ACADEMIC STRUCTURE TABLES
 -- =====================================================
 
--- Create academic terms table
 CREATE TABLE IF NOT EXISTS academic_term (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     school_id BIGINT UNSIGNED NOT NULL,
@@ -248,14 +175,9 @@ CREATE TABLE IF NOT EXISTS academic_term (
     status ENUM('upcoming', 'active', 'completed') DEFAULT 'upcoming',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP NULL DEFAULT NULL,
-    
-    FOREIGN KEY (school_id) REFERENCES school(id) ON DELETE CASCADE,
-    INDEX idx_school_term (school_id, is_current),
-    INDEX idx_academic_year (academic_year)
+    deleted_at TIMESTAMP NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Academic terms/semesters';
 
--- Create sections/streams table (e.g., Class 5A, Class 5B)
 CREATE TABLE IF NOT EXISTS section (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     school_id BIGINT UNSIGNED NOT NULL,
@@ -266,16 +188,9 @@ CREATE TABLE IF NOT EXISTS section (
     room_number VARCHAR(50),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP NULL DEFAULT NULL,
-    
-    FOREIGN KEY (school_id) REFERENCES school(id) ON DELETE CASCADE,
-    FOREIGN KEY (class_id) REFERENCES class(id) ON DELETE CASCADE,
-    FOREIGN KEY (class_teacher_id) REFERENCES teacher(id) ON DELETE SET NULL,
-    INDEX idx_school_section (school_id, class_id),
-    UNIQUE KEY unique_class_section (class_id, name)
+    deleted_at TIMESTAMP NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Class sections/streams';
 
--- Create class_subject junction table
 CREATE TABLE IF NOT EXISTS class_subject (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     school_id BIGINT UNSIGNED NOT NULL,
@@ -286,21 +201,13 @@ CREATE TABLE IF NOT EXISTS class_subject (
     pass_mark DECIMAL(5,2) DEFAULT 50.00,
     total_marks DECIMAL(5,2) DEFAULT 100.00,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    
-    UNIQUE KEY unique_class_subject (class_id, subject_id),
-    FOREIGN KEY (school_id) REFERENCES school(id) ON DELETE CASCADE,
-    FOREIGN KEY (class_id) REFERENCES class(id) ON DELETE CASCADE,
-    FOREIGN KEY (subject_id) REFERENCES subject(id) ON DELETE CASCADE,
-    FOREIGN KEY (teacher_id) REFERENCES teacher(id) ON DELETE SET NULL,
-    INDEX idx_school_class_subject (school_id, class_id)
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Subjects assigned to classes';
 
 -- =====================================================
 -- SECTION 6: SYSTEM CONFIGURATION TABLES
 -- =====================================================
 
--- Create system settings table
 CREATE TABLE IF NOT EXISTS system_setting (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     school_id BIGINT UNSIGNED NULL COMMENT 'NULL for global settings, set for school-specific',
@@ -311,14 +218,9 @@ CREATE TABLE IF NOT EXISTS system_setting (
     is_encrypted BOOLEAN DEFAULT FALSE,
     description TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    
-    UNIQUE KEY unique_school_setting (school_id, category, setting_key),
-    FOREIGN KEY (school_id) REFERENCES school(id) ON DELETE CASCADE,
-    INDEX idx_category (category)
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='System and school configuration';
 
--- Create audit log table for tracking changes
 CREATE TABLE IF NOT EXISTS audit_log (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     school_id BIGINT UNSIGNED NULL,
@@ -330,20 +232,13 @@ CREATE TABLE IF NOT EXISTS audit_log (
     new_values JSON,
     ip_address VARCHAR(45),
     user_agent TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
-    FOREIGN KEY (school_id) REFERENCES school(id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE SET NULL,
-    INDEX idx_school_audit (school_id, created_at),
-    INDEX idx_entity (entity_type, entity_id),
-    INDEX idx_user_action (user_id, action)
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='System audit trail';
 
 -- =====================================================
 -- SECTION 7: INITIAL DATA SEEDING
 -- =====================================================
 
--- Insert default system permissions
 INSERT IGNORE INTO permission (module, name, slug, description) VALUES
 ('students', 'View Students', 'students.view', 'View student records'),
 ('students', 'Create Students', 'students.create', 'Add new students'),
@@ -365,7 +260,6 @@ INSERT IGNORE INTO permission (module, name, slug, description) VALUES
 ('settings', 'User Management', 'settings.users', 'Manage user accounts'),
 ('settings', 'Role Management', 'settings.roles', 'Manage roles and permissions');
 
--- Insert default system roles
 INSERT IGNORE INTO role (school_id, name, slug, description, is_system_role, permissions) VALUES
 (NULL, 'Super Administrator', 'super_admin', 'Full system access across all schools', TRUE, '["*"]'),
 (NULL, 'School Administrator', 'school_admin', 'Full access within school', TRUE, '["students.*", "teachers.*", "finance.*", "exams.*", "settings.*"]'),
@@ -375,7 +269,4 @@ INSERT IGNORE INTO role (school_id, name, slug, description, is_system_role, per
 
 -- =====================================================
 -- END OF SCHEMA ALTERATIONS
--- =====================================================
--- Run this file first to update existing tables
--- Then run database_schema_new_tables_v0.1.01.sql
 -- =====================================================

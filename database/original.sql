@@ -18,8 +18,8 @@ SET time_zone = "+00:00";
 --
 
 -- Create database if it doesn't exist
-CREATE DATABASE IF NOT EXISTS `drais` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
-USE `drais`;
+CREATE DATABASE IF NOT EXISTS `drais_school` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+USE `drais_school`;
 
 -- Disable foreign key checks for clean table creation
 SET FOREIGN_KEY_CHECKS = 0;
@@ -154,7 +154,7 @@ CREATE TABLE `classes` (
   `name` varchar(50) NOT NULL,
   `curriculum_id` int(11) DEFAULT NULL,
   `class_level` int(11) DEFAULT NULL,
-  `head_teacher_id` bigint(20) DEFAULT NULL
+  `class_teacher_id` bigint(20) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------

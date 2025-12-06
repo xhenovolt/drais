@@ -209,7 +209,7 @@ export default function Home() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Link href="/dashboard">
+              <Link href="/auth/register">
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Button
                     size="lg"
@@ -220,15 +220,17 @@ export default function Home() {
                   </Button>
                 </motion.div>
               </Link>
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="text-lg px-8 py-6 border-2 border-blue-600 dark:border-blue-400"
-                >
-                  Watch Demo
-                </Button>
-              </motion.div>
+              <Link href="/demo">
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="text-lg px-8 py-6 border-2 border-blue-600 dark:border-blue-400"
+                  >
+                    Watch Demo
+                  </Button>
+                </motion.div>
+              </Link>
             </div>
 
             {/* Trust Indicators */}

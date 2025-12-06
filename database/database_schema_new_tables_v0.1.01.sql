@@ -30,18 +30,8 @@ CREATE TABLE IF NOT EXISTS attendance (
     recorded_by BIGINT UNSIGNED NULL COMMENT 'User who recorded attendance',
     method ENUM('manual', 'biometric', 'rfid', 'qr_code') DEFAULT 'manual',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     
-    FOREIGN KEY (school_id) REFERENCES school(id) ON DELETE CASCADE,
-    FOREIGN KEY (student_id) REFERENCES student(id) ON DELETE CASCADE,
-    FOREIGN KEY (class_id) REFERENCES class(id) ON DELETE CASCADE,
-    FOREIGN KEY (section_id) REFERENCES section(id) ON DELETE SET NULL,
-    FOREIGN KEY (academic_term_id) REFERENCES academic_term(id) ON DELETE CASCADE,
-    FOREIGN KEY (recorded_by) REFERENCES user(id) ON DELETE SET NULL,
-    UNIQUE KEY unique_student_attendance (student_id, attendance_date),
-    INDEX idx_school_date (school_id, attendance_date),
-    INDEX idx_class_date (class_id, attendance_date),
-    INDEX idx_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Student daily attendance records';
 
 -- Teacher/Staff attendance tracking
@@ -58,14 +48,8 @@ CREATE TABLE IF NOT EXISTS staff_attendance (
     recorded_by BIGINT UNSIGNED NULL,
     method ENUM('manual', 'biometric', 'rfid', 'qr_code') DEFAULT 'manual',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     
-    FOREIGN KEY (school_id) REFERENCES school(id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE,
-    FOREIGN KEY (recorded_by) REFERENCES user(id) ON DELETE SET NULL,
-    UNIQUE KEY unique_staff_attendance (user_id, attendance_date),
-    INDEX idx_school_date (school_id, attendance_date),
-    INDEX idx_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Staff daily attendance records';
 
 -- =====================================================
@@ -85,13 +69,8 @@ CREATE TABLE IF NOT EXISTS fee_structure (
     description TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP NULL DEFAULT NULL,
+    deleted_at TIMESTAMP NULL DEFAULT NULL
     
-    FOREIGN KEY (school_id) REFERENCES school(id) ON DELETE CASCADE,
-    FOREIGN KEY (academic_term_id) REFERENCES academic_term(id) ON DELETE CASCADE,
-    FOREIGN KEY (class_id) REFERENCES class(id) ON DELETE CASCADE,
-    INDEX idx_school_term (school_id, academic_term_id),
-    INDEX idx_class (class_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Fee structure definitions';
 
 -- Payment transactions
@@ -111,16 +90,8 @@ CREATE TABLE IF NOT EXISTS payment (
     remarks TEXT,
     processed_by BIGINT UNSIGNED NULL COMMENT 'User who processed payment',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     
-    FOREIGN KEY (school_id) REFERENCES school(id) ON DELETE CASCADE,
-    FOREIGN KEY (student_id) REFERENCES student(id) ON DELETE CASCADE,
-    FOREIGN KEY (academic_term_id) REFERENCES academic_term(id) ON DELETE CASCADE,
-    FOREIGN KEY (processed_by) REFERENCES user(id) ON DELETE SET NULL,
-    INDEX idx_school_payment (school_id, payment_date),
-    INDEX idx_student (student_id),
-    INDEX idx_status (status),
-    INDEX idx_invoice (invoice_number)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Payment transactions';
 
 -- Student account balances
@@ -134,14 +105,8 @@ CREATE TABLE IF NOT EXISTS student_account (
     balance DECIMAL(10,2) AS (total_fees - amount_paid) STORED,
     last_payment_date DATETIME NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     
-    UNIQUE KEY unique_student_term (student_id, academic_term_id),
-    FOREIGN KEY (school_id) REFERENCES school(id) ON DELETE CASCADE,
-    FOREIGN KEY (student_id) REFERENCES student(id) ON DELETE CASCADE,
-    FOREIGN KEY (academic_term_id) REFERENCES academic_term(id) ON DELETE CASCADE,
-    INDEX idx_school_term (school_id, academic_term_id),
-    INDEX idx_balance (balance)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Student fee account balances';
 
 -- =====================================================
@@ -164,14 +129,8 @@ CREATE TABLE IF NOT EXISTS notification (
     is_read BOOLEAN DEFAULT FALSE,
     read_at TIMESTAMP NULL,
     expires_at TIMESTAMP NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     
-    FOREIGN KEY (school_id) REFERENCES school(id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE,
-    INDEX idx_user_unread (user_id, is_read),
-    INDEX idx_school_created (school_id, created_at),
-    INDEX idx_type (type),
-    INDEX idx_category (category)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='System notifications';
 
 -- Messages/Chat system
@@ -191,16 +150,8 @@ CREATE TABLE IF NOT EXISTS message (
     parent_message_id BIGINT UNSIGNED NULL COMMENT 'For reply threading',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP NULL DEFAULT NULL,
+    deleted_at TIMESTAMP NULL DEFAULT NULL
     
-    FOREIGN KEY (school_id) REFERENCES school(id) ON DELETE CASCADE,
-    FOREIGN KEY (sender_id) REFERENCES user(id) ON DELETE CASCADE,
-    FOREIGN KEY (recipient_id) REFERENCES user(id) ON DELETE CASCADE,
-    FOREIGN KEY (parent_message_id) REFERENCES message(id) ON DELETE SET NULL,
-    INDEX idx_conversation (conversation_id),
-    INDEX idx_recipient_unread (recipient_id, is_read),
-    INDEX idx_sender (sender_id),
-    INDEX idx_created (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Internal messaging system';
 
 -- SMS logs
@@ -217,13 +168,8 @@ CREATE TABLE IF NOT EXISTS sms_log (
     error_message TEXT,
     sent_at TIMESTAMP NULL,
     delivered_at TIMESTAMP NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     
-    FOREIGN KEY (school_id) REFERENCES school(id) ON DELETE CASCADE,
-    FOREIGN KEY (recipient_user_id) REFERENCES user(id) ON DELETE SET NULL,
-    INDEX idx_school_status (school_id, status),
-    INDEX idx_recipient (recipient_phone),
-    INDEX idx_sent_date (sent_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='SMS sending logs';
 
 -- Email logs
@@ -241,13 +187,8 @@ CREATE TABLE IF NOT EXISTS email_log (
     error_message TEXT,
     sent_at TIMESTAMP NULL,
     opened_at TIMESTAMP NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     
-    FOREIGN KEY (school_id) REFERENCES school(id) ON DELETE CASCADE,
-    FOREIGN KEY (recipient_user_id) REFERENCES user(id) ON DELETE SET NULL,
-    INDEX idx_school_status (school_id, status),
-    INDEX idx_recipient (recipient_email),
-    INDEX idx_sent_date (sent_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Email sending logs';
 
 -- =====================================================
@@ -272,12 +213,8 @@ CREATE TABLE IF NOT EXISTS library_book (
     price DECIMAL(10,2),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP NULL DEFAULT NULL,
+    deleted_at TIMESTAMP NULL DEFAULT NULL
     
-    FOREIGN KEY (school_id) REFERENCES school(id) ON DELETE CASCADE,
-    INDEX idx_school_category (school_id, category),
-    INDEX idx_isbn (isbn),
-    INDEX idx_title (title)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Library book catalog';
 
 -- Book borrowing records
@@ -297,16 +234,8 @@ CREATE TABLE IF NOT EXISTS library_transaction (
     issued_by BIGINT UNSIGNED NULL,
     received_by BIGINT UNSIGNED NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     
-    FOREIGN KEY (school_id) REFERENCES school(id) ON DELETE CASCADE,
-    FOREIGN KEY (book_id) REFERENCES library_book(id) ON DELETE CASCADE,
-    FOREIGN KEY (issued_by) REFERENCES user(id) ON DELETE SET NULL,
-    FOREIGN KEY (received_by) REFERENCES user(id) ON DELETE SET NULL,
-    INDEX idx_school_status (school_id, status),
-    INDEX idx_borrower (borrower_type, borrower_id),
-    INDEX idx_due_date (due_date),
-    INDEX idx_book (book_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Book borrowing transactions';
 
 -- =====================================================
@@ -333,14 +262,8 @@ CREATE TABLE IF NOT EXISTS event (
     registration_required BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP NULL DEFAULT NULL,
+    deleted_at TIMESTAMP NULL DEFAULT NULL
     
-    FOREIGN KEY (school_id) REFERENCES school(id) ON DELETE CASCADE,
-    FOREIGN KEY (class_id) REFERENCES class(id) ON DELETE SET NULL,
-    FOREIGN KEY (organizer_id) REFERENCES user(id) ON DELETE SET NULL,
-    INDEX idx_school_date (school_id, start_date),
-    INDEX idx_event_type (event_type),
-    INDEX idx_target_audience (target_audience)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='School events and calendar';
 
 -- Event participants/attendance
@@ -352,11 +275,8 @@ CREATE TABLE IF NOT EXISTS event_participant (
     participant_name VARCHAR(255),
     status ENUM('registered', 'attended', 'absent', 'cancelled') DEFAULT 'registered',
     registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    attended_at TIMESTAMP NULL,
+    attended_at TIMESTAMP NULL
     
-    FOREIGN KEY (event_id) REFERENCES event(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_event_participant (event_id, participant_type, participant_id),
-    INDEX idx_event_status (event_id, status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Event participants and attendance';
 
 -- =====================================================
@@ -378,17 +298,8 @@ CREATE TABLE IF NOT EXISTS timetable (
     room_number VARCHAR(50),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP NULL DEFAULT NULL,
+    deleted_at TIMESTAMP NULL DEFAULT NULL
     
-    FOREIGN KEY (school_id) REFERENCES school(id) ON DELETE CASCADE,
-    FOREIGN KEY (academic_term_id) REFERENCES academic_term(id) ON DELETE CASCADE,
-    FOREIGN KEY (class_id) REFERENCES class(id) ON DELETE CASCADE,
-    FOREIGN KEY (section_id) REFERENCES section(id) ON DELETE SET NULL,
-    FOREIGN KEY (subject_id) REFERENCES subject(id) ON DELETE CASCADE,
-    FOREIGN KEY (teacher_id) REFERENCES teacher(id) ON DELETE SET NULL,
-    INDEX idx_class_day (class_id, day_of_week),
-    INDEX idx_teacher_day (teacher_id, day_of_week),
-    INDEX idx_school_term (school_id, academic_term_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Class timetables';
 
 -- =====================================================
@@ -410,10 +321,8 @@ CREATE TABLE IF NOT EXISTS transport_route (
     status ENUM('active', 'inactive') DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP NULL DEFAULT NULL,
+    deleted_at TIMESTAMP NULL DEFAULT NULL
     
-    FOREIGN KEY (school_id) REFERENCES school(id) ON DELETE CASCADE,
-    INDEX idx_school_route (school_id, status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Transport routes';
 
 -- Route stops
@@ -426,10 +335,8 @@ CREATE TABLE IF NOT EXISTS route_stop (
     dropoff_time TIME,
     landmark VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     
-    FOREIGN KEY (route_id) REFERENCES transport_route(id) ON DELETE CASCADE,
-    INDEX idx_route_order (route_id, stop_order)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Route pickup/dropoff stops';
 
 -- Student transport assignments
@@ -442,16 +349,8 @@ CREATE TABLE IF NOT EXISTS student_transport (
     academic_term_id BIGINT UNSIGNED NOT NULL,
     status ENUM('active', 'suspended', 'cancelled') DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     
-    FOREIGN KEY (school_id) REFERENCES school(id) ON DELETE CASCADE,
-    FOREIGN KEY (student_id) REFERENCES student(id) ON DELETE CASCADE,
-    FOREIGN KEY (route_id) REFERENCES transport_route(id) ON DELETE CASCADE,
-    FOREIGN KEY (stop_id) REFERENCES route_stop(id) ON DELETE CASCADE,
-    FOREIGN KEY (academic_term_id) REFERENCES academic_term(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_student_term_transport (student_id, academic_term_id),
-    INDEX idx_route (route_id),
-    INDEX idx_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Student transport assignments';
 
 -- =====================================================
@@ -473,16 +372,8 @@ CREATE TABLE IF NOT EXISTS exam_schedule (
     total_marks DECIMAL(5,2) DEFAULT 100.00,
     invigilator_id BIGINT UNSIGNED NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     
-    FOREIGN KEY (school_id) REFERENCES school(id) ON DELETE CASCADE,
-    FOREIGN KEY (exam_id) REFERENCES exam(id) ON DELETE CASCADE,
-    FOREIGN KEY (class_id) REFERENCES class(id) ON DELETE CASCADE,
-    FOREIGN KEY (subject_id) REFERENCES subject(id) ON DELETE CASCADE,
-    FOREIGN KEY (invigilator_id) REFERENCES teacher(id) ON DELETE SET NULL,
-    INDEX idx_exam_class (exam_id, class_id),
-    INDEX idx_exam_date (exam_date),
-    INDEX idx_school (school_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Examination schedules';
 
 -- Exam results/marks
@@ -500,17 +391,8 @@ CREATE TABLE IF NOT EXISTS exam_result (
     verified_by BIGINT UNSIGNED NULL,
     is_verified BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     
-    FOREIGN KEY (school_id) REFERENCES school(id) ON DELETE CASCADE,
-    FOREIGN KEY (exam_schedule_id) REFERENCES exam_schedule(id) ON DELETE CASCADE,
-    FOREIGN KEY (student_id) REFERENCES student(id) ON DELETE CASCADE,
-    FOREIGN KEY (entered_by) REFERENCES user(id) ON DELETE SET NULL,
-    FOREIGN KEY (verified_by) REFERENCES user(id) ON DELETE SET NULL,
-    UNIQUE KEY unique_exam_student (exam_schedule_id, student_id),
-    INDEX idx_student (student_id),
-    INDEX idx_school (school_id),
-    INDEX idx_percentage (percentage)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Examination results and marks';
 
 -- =====================================================
@@ -528,10 +410,8 @@ CREATE TABLE IF NOT EXISTS certificate_template (
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP NULL DEFAULT NULL,
+    deleted_at TIMESTAMP NULL DEFAULT NULL
     
-    FOREIGN KEY (school_id) REFERENCES school(id) ON DELETE CASCADE,
-    INDEX idx_school_type (school_id, template_type)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Certificate templates';
 
 -- Generated certificates
@@ -548,15 +428,8 @@ CREATE TABLE IF NOT EXISTS certificate (
     pdf_url VARCHAR(500),
     issued_by BIGINT UNSIGNED NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     
-    FOREIGN KEY (school_id) REFERENCES school(id) ON DELETE CASCADE,
-    FOREIGN KEY (template_id) REFERENCES certificate_template(id) ON DELETE CASCADE,
-    FOREIGN KEY (student_id) REFERENCES student(id) ON DELETE CASCADE,
-    FOREIGN KEY (issued_by) REFERENCES user(id) ON DELETE SET NULL,
-    INDEX idx_student (student_id),
-    INDEX idx_certificate_number (certificate_number),
-    INDEX idx_issue_date (issue_date)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Issued certificates';
 
 -- =====================================================
@@ -575,10 +448,8 @@ CREATE TABLE IF NOT EXISTS plugin (
     is_active BOOLEAN DEFAULT TRUE,
     settings JSON COMMENT 'Plugin-specific settings',
     installed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     
-    FOREIGN KEY (school_id) REFERENCES school(id) ON DELETE CASCADE,
-    INDEX idx_school_plugin (school_id, is_active)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Installed plugins and extensions';
 
 -- =====================================================
@@ -596,13 +467,8 @@ CREATE TABLE IF NOT EXISTS saved_report (
     file_url VARCHAR(500),
     file_format ENUM('pdf', 'excel', 'csv') NOT NULL,
     generated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    expires_at TIMESTAMP NULL COMMENT 'Auto-delete old reports',
+    expires_at TIMESTAMP NULL COMMENT 'Auto-delete old reports'
     
-    FOREIGN KEY (school_id) REFERENCES school(id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE,
-    INDEX idx_school_user (school_id, user_id),
-    INDEX idx_report_type (report_type),
-    INDEX idx_generated_at (generated_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Generated and saved reports';
 
 -- =====================================================
@@ -624,12 +490,8 @@ CREATE TABLE IF NOT EXISTS file_upload (
     entity_id BIGINT UNSIGNED COMMENT 'ID of related record',
     description TEXT,
     is_public BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     
-    FOREIGN KEY (school_id) REFERENCES school(id) ON DELETE CASCADE,
-    FOREIGN KEY (uploaded_by) REFERENCES user(id) ON DELETE SET NULL,
-    INDEX idx_entity (entity_type, entity_id),
-    INDEX idx_school_uploads (school_id, created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='File upload tracking';
 
 -- =====================================================
