@@ -96,7 +96,15 @@ export default function StudentsPage() {
       }
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch students: ${response.statusText}`);
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.error || `Failed to fetch students: ${response.statusText}`;
+        console.error('Students fetch error:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorMessage,
+          data: errorData
+        });
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();

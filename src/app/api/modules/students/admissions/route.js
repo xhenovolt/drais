@@ -20,7 +20,16 @@ import { getPool } from '@/lib/db/postgres.js';
  */
 export async function GET(request) {
   try {
-    const authUser = await requireApiAuthFromCookies();
+    let authUser;
+    try {
+      authUser = await requireApiAuthFromCookies();
+    } catch (authError) {
+      return NextResponse.json(
+        { error: authError.message || 'Unauthorized' },
+        { status: authError.status || 401 }
+      );
+    }
+
     const pool = await getPool();
     
     const { searchParams } = new URL(request.url);
@@ -41,7 +50,7 @@ export async function GET(request) {
     }
 
     // Build WHERE clause
-    let whereClause = 'WHERE s.school_id = $1 AND s.deleted_at IS NULL';
+    let whereClause = 'WHERE s.school_id = $1';
     const params = [schoolId];
     let paramIndex = 2;
 
@@ -61,36 +70,47 @@ export async function GET(request) {
       whereClause += ` AND (
         s.first_name ILIKE $${paramIndex} OR 
         s.last_name ILIKE $${paramIndex} OR 
-        s.admission_number ILIKE $${paramIndex}
+        s.admission_no ILIKE $${paramIndex}
       )`;
       params.push(`%${search}%`);
       paramIndex++;
     }
 
-    // Get total count
+    // Get total count (use same params for WHERE clause only)
+    const countParams = params.slice(0, paramIndex - 1);
     const countResult = await pool.query(
       `SELECT COUNT(*) as total FROM students s ${whereClause}`,
-      params.slice(0, paramIndex - (search ? 2 : 1))
+      countParams
     );
     const total = parseInt(countResult.rows[0].total);
 
-    // Get paginated results
+    // Get paginated results - map DB columns to API schema
     const query = `
       SELECT 
-        s.id, s.admission_number, s.first_name, s.middle_name, s.last_name,
-        s.gender, s.date_of_birth, s.class_id, s.status, s.enrollment_date,
-        s.guardian_name, s.guardian_phone, s.guardian_email, s.address,
+        s.id, 
+        s.admission_no as admission_number, 
+        s.first_name, 
+        s.last_name,
+        s.gender, 
+        s.dob as date_of_birth, 
+        s.class_id, 
+        s.status, 
+        s.created_at as enrollment_date,
+        s.address,
         c.name as class_name,
-        s.created_at, s.updated_at
+        s.created_at, 
+        s.updated_at
       FROM students s
       LEFT JOIN classes c ON s.class_id = c.id
       ${whereClause}
-      ORDER BY s.admission_number DESC
+      ORDER BY s.admission_no DESC
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `;
-    params.push(limit, offset);
+    
+    // Create final params array for main query
+    const queryParams = params.concat([limit, offset]);
 
-    const result = await pool.query(query, params);
+    const result = await pool.query(query, queryParams);
 
     return NextResponse.json({
       success: true,
@@ -104,12 +124,15 @@ export async function GET(request) {
     });
 
   } catch (error) {
-    if (error.status === 401) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    console.error('[Admissions GET] Error:', error.message || error);
+    if (error.message && error.message.includes('no such table')) {
+      return NextResponse.json(
+        { error: 'Database tables not initialized. Run migration: node scripts/students-module-schema.js' },
+        { status: 500 }
+      );
     }
-    console.error('[Admissions GET]', error);
     return NextResponse.json(
-      { error: 'Failed to fetch students' },
+      { error: error.message || 'Failed to fetch students' },
       { status: 500 }
     );
   }
@@ -121,10 +144,18 @@ export async function GET(request) {
  */
 export async function POST(request) {
   try {
-    const authUser = await requireApiAuthFromCookies();
+    let authUser;
+    try {
+      authUser = await requireApiAuthFromCookies();
+    } catch (authError) {
+      return NextResponse.json(
+        { error: authError.message || 'Unauthorized' },
+        { status: authError.status || 401 }
+      );
+    }
+
     const body = await request.json();
     const pool = await getPool();
-    const client = await pool.connect();
 
     const schoolId = authUser.schoolId;
     if (!schoolId) {
@@ -134,23 +165,29 @@ export async function POST(request) {
       );
     }
 
-    // Validation
-    const { admission_number, first_name, last_name, gender, date_of_birth, class_id } = body;
-    const requiredFields = ['admission_number', 'first_name', 'last_name'];
+    // Validation - required fields from database schema
+    const { first_name, last_name, gender, dob, class_id } = body;
     
-    for (const field of requiredFields) {
-      if (!body[field]) {
-        return NextResponse.json(
-          { error: `${field} is required` },
-          { status: 400 }
-        );
-      }
+    if (!first_name || !last_name) {
+      return NextResponse.json(
+        { error: 'first_name and last_name are required' },
+        { status: 400 }
+      );
     }
 
-    // Check if admission_number is unique in this school
+    // Generate admission_no if not provided
+    let admission_no = body.admission_no;
+    if (!admission_no) {
+      // Generate simple format: ADM-YY-XXXXX
+      const year = new Date().getFullYear().toString().slice(2);
+      const random = Math.floor(Math.random() * 100000).toString().padStart(5, '0');
+      admission_no = `ADM-${year}-${random}`;
+    }
+
+    // Check if admission_no is unique in this school
     const existingCheck = await pool.query(
-      'SELECT id FROM students WHERE school_id = $1 AND admission_number = $2 AND deleted_at IS NULL',
-      [schoolId, admission_number]
+      'SELECT id FROM students WHERE school_id = $1 AND admission_no = $2',
+      [schoolId, admission_no]
     );
 
     if (existingCheck.rows.length > 0) {
@@ -160,99 +197,49 @@ export async function POST(request) {
       );
     }
 
-    try {
-      await client.query('BEGIN');
+    // Insert student record
+    const result = await pool.query(
+      `INSERT INTO students (
+        school_id, admission_no, first_name, last_name,
+        gender, dob, class_id, status, address,
+        created_at, updated_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      RETURNING id, admission_no, first_name, last_name, gender, dob, class_id, status, created_at`,
+      [
+        schoolId,
+        admission_no,
+        first_name.trim(),
+        last_name.trim(),
+        gender || null,
+        dob || null,
+        class_id || null,
+        'active',
+        body.address ? body.address.trim() : null
+      ]
+    );
 
-      // Insert student
-      const studentResult = await client.query(
-        `INSERT INTO students (
-          school_id, admission_number, first_name, middle_name, last_name,
-          gender, date_of_birth, class_id, status, enrollment_date,
-          guardian_name, guardian_phone, guardian_email, address,
-          created_at, updated_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_DATE, $10, $11, $12, $13, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-        RETURNING id, admission_number, first_name, last_name, status, enrollment_date`,
-        [
-          schoolId,
-          admission_number,
-          first_name,
-          body.middle_name || null,
-          last_name,
-          gender || null,
-          date_of_birth || null,
-          class_id || null,
-          'active',
-          body.guardian_name || null,
-          body.guardian_phone || null,
-          body.guardian_email || null,
-          body.address || null
-        ]
-      );
+    const student = result.rows[0];
 
-      const student = studentResult.rows[0];
-      const studentId = student.id;
-
-      // Create admission record
-      await client.query(
-        `INSERT INTO student_admissions (
-          school_id, student_id, admission_number, admission_date,
-          admission_type, previous_school, remarks, admitted_by,
-          created_at, updated_at
-        ) VALUES ($1, $2, $3, CURRENT_DATE, $4, $5, $6, $7, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
-        [
-          schoolId,
-          studentId,
-          admission_number,
-          body.admission_type || 'regular',
-          body.previous_school || null,
-          body.remarks || null,
-          authUser.userId
-        ]
-      );
-
-      // Log audit
-      await client.query(
-        `INSERT INTO student_audit_log (
-          school_id, user_id, entity_type, entity_id, action, changes, created_at
-        ) VALUES ($1, $2, 'student', $3, 'create', $4, CURRENT_TIMESTAMP)`,
-        [
-          schoolId,
-          authUser.userId,
-          studentId,
-          JSON.stringify({
-            first_name,
-            last_name,
-            admission_number,
-            status: 'active'
-          })
-        ]
-      );
-
-      await client.query('COMMIT');
-
-      return NextResponse.json({
-        success: true,
-        message: 'Student admitted successfully',
-        data: {
-          id: studentId,
-          ...student
-        }
-      }, { status: 201 });
-
-    } catch (transactionError) {
-      await client.query('ROLLBACK');
-      throw transactionError;
-    } finally {
-      client.release();
-    }
+    return NextResponse.json({
+      success: true,
+      message: 'Student admitted successfully',
+      data: {
+        id: student.id,
+        admission_number: student.admission_no,
+        first_name: student.first_name,
+        last_name: student.last_name,
+        gender: student.gender,
+        date_of_birth: student.dob,
+        class_id: student.class_id,
+        status: student.status,
+        enrollment_date: student.created_at
+      }
+    }, { status: 201 });
 
   } catch (error) {
-    if (error.status === 401) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    console.error('[Admissions POST]', error);
+    console.error('[Admissions POST] Error:', error.message || error);
     return NextResponse.json(
-      { error: 'Failed to create student' },
+      { error: error.message || 'Failed to admit student' },
       { status: 500 }
     );
   }
