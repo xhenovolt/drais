@@ -1,0 +1,29 @@
+                                          Table "public.transactions"
+      Column      |           Type           | Collation | Nullable |                 Default                  
+------------------+--------------------------+-----------+----------+------------------------------------------
+ id               | bigint                   |           | not null | nextval('transactions_id_seq'::regclass)
+ school_id        | bigint                   |           | not null | 
+ user_id          | bigint                   |           |          | 
+ transaction_type | character varying(100)   |           | not null | 
+ amount           | numeric(12,2)            |           | not null | 
+ currency         | character varying(10)    |           |          | 'UGX'::character varying
+ status           | character varying(50)    |           |          | 'pending'::character varying
+ reference_number | character varying(100)   |           |          | 
+ description      | text                     |           |          | 
+ payment_method   | character varying(100)   |           |          | 
+ source_id        | bigint                   |           |          | 
+ created_at       | timestamp with time zone |           |          | CURRENT_TIMESTAMP
+ updated_at       | timestamp with time zone |           |          | CURRENT_TIMESTAMP
+Indexes:
+    "transactions_pkey" PRIMARY KEY, btree (id)
+    "idx_transactions_created" btree (created_at DESC)
+    "idx_transactions_school" btree (school_id)
+    "idx_transactions_status" btree (status)
+    "idx_transactions_type" btree (transaction_type)
+    "idx_transactions_user" btree (user_id)
+Check constraints:
+    "transactions_status_check" CHECK (status::text = ANY (ARRAY['pending'::character varying, 'completed'::character varying, 'failed'::character varying, 'cancelled'::character varying]::text[]))
+Foreign-key constraints:
+    "transactions_school_fk" FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE
+    "transactions_user_fk" FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+
