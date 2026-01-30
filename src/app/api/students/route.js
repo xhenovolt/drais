@@ -1,23 +1,39 @@
 /**
  * Students List/Create Endpoint
- * GET /api/students → List all students
- * POST /api/students → Create student (alias to /admit for compatibility)
+ * GET /api/students → List all students (school-scoped)
+ * POST /api/students → Create student (alias to /admissions for compatibility)
  * 
- * DRAIS v0.0.0045
+ * DRAIS v0.0.0300 - CRITICAL FIX: Proper auth + school scoping
  */
 
 import { NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth/jwt-enhanced';
+import { requireApiAuthFromCookies } from '@/lib/api-auth.js';
 import { getAllStudents, admitStudent, validateAdmissionData } from '@/lib/services/student.service';
 
 /**
  * GET - List all students with pagination, filtering, search
+ * STRICT SCHOOL SCOPING: Only returns students for user's school
  */
 export async function GET(request) {
   try {
-    // Verify authentication
-    const user = await requireAuth(request);
-    const schoolId = user.school_id || 1;
+    // CRITICAL: Get authenticated user with school context
+    let user;
+    try {
+      user = await requireApiAuthFromCookies();
+    } catch (authError) {
+      return NextResponse.json(
+        { success: false, error: authError.message || 'Unauthorized' },
+        { status: authError.status || 401 }
+      );
+    }
+    
+    const schoolId = user.schoolId;
+    if (!schoolId) {
+      return NextResponse.json(
+        { success: false, error: 'School context not configured' },
+        { status: 403 }
+      );
+    }
 
     // Parse query parameters
     const { searchParams } = new URL(request.url);
@@ -27,7 +43,7 @@ export async function GET(request) {
     const classId = searchParams.get('classId') ? parseInt(searchParams.get('classId')) : null;
     const status = searchParams.get('status') || 'active';
 
-    // Get students
+    // Get students (school-scoped)
     const result = await getAllStudents({
       page,
       limit,
@@ -37,41 +53,61 @@ export async function GET(request) {
       schoolId
     });
 
+    // If no students, return empty array with proper structure
+    if (!result.data || result.data.length === 0) {
+      return NextResponse.json({
+        success: true,
+        data: [],
+        pagination: {
+          page: 1,
+          limit: limit,
+          total: 0,
+          pages: 0
+        }
+      }, { status: 200 });
+    }
+
     return NextResponse.json(result, { status: 200 });
 
   } catch (error) {
     console.error('Get students error:', error);
-    
-    if (error.message && (
-      error.message.includes('Authentication required') || 
-      error.message.includes('Invalid or expired token')
-    )) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
     
     return NextResponse.json(
       { 
         success: false, 
         error: error.message || 'Failed to fetch students' 
       },
-      { status: 500 }
+      { status: error.status || 500 }
     );
   }
 }
 
 /**
- * POST - Create/admit student (alias to /admit endpoint)
+ * POST - Create/admit student (alias to /admissions endpoint)
  */
 export async function POST(request) {
   try {
-    const user = await requireAuth(request);
-    const userId = user.id;
+    // Get authenticated user with school context
+    let user;
+    try {
+      user = await requireApiAuthFromCookies();
+    } catch (authError) {
+      return NextResponse.json(
+        { success: false, error: authError.message || 'Unauthorized' },
+        { status: authError.status || 401 }
+      );
+    }
+    
+    const schoolId = user.schoolId;
+    if (!schoolId) {
+      return NextResponse.json(
+        { success: false, error: 'School context not configured' },
+        { status: 403 }
+      );
+    }
 
     const admissionData = await request.json();
-    admissionData.schoolId = user.school_id || 1;
+    admissionData.schoolId = schoolId;
 
     // Validate
     const validation = validateAdmissionData(admissionData);
@@ -87,29 +123,19 @@ export async function POST(request) {
     }
 
     // Admit student
-    const result = await admitStudent(admissionData, userId);
+    const result = await admitStudent(admissionData, user.userId);
 
     return NextResponse.json(result, { status: 201 });
 
   } catch (error) {
     console.error('Create student error:', error);
     
-    if (error.message && (
-      error.message.includes('Authentication required') || 
-      error.message.includes('Invalid or expired token')
-    )) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-    
     return NextResponse.json(
       { 
         success: false, 
         error: error.message || 'Failed to create student' 
       },
-      { status: 500 }
+      { status: error.status || 500 }
     );
   }
 }

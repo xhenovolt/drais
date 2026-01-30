@@ -78,16 +78,24 @@ export default function StudentsPage() {
         params.append('search', searchQuery);
       }
 
-      const response = await fetch(`/api/students?${params}`, {
+      const response = await fetch(`/api/modules/students/admissions?${params}`, {
         headers: {
           'Content-Type': 'application/json',
         }
       });
 
+      if (response.status === 401) {
+        setError('Session expired. Please log in again.');
+        router.push('/login');
+        return;
+      }
+
+      if (response.status === 403) {
+        setError('School context not configured. Please contact administration.');
+        return;
+      }
+
       if (!response.ok) {
-        if (response.status === 401) {
-          throw new Error('Unauthorized. Please log in again.');
-        }
         throw new Error(`Failed to fetch students: ${response.statusText}`);
       }
 
@@ -98,8 +106,8 @@ export default function StudentsPage() {
       }
 
       setStudents(data.data || []);
-      setTotalStudents(data.pagination?.totalItems || 0);
-      setTotalPages(data.pagination?.totalPages || 1);
+      setTotalStudents(data.pagination?.total || 0);
+      setTotalPages(data.pagination?.pages || 1);
       setActiveCount(data.data?.filter(s => s.status === 'active').length || 0);
     } catch (err) {
       console.error('Error fetching students:', err);
@@ -110,10 +118,8 @@ export default function StudentsPage() {
     }
   };
 
-  const handleAdmissionSuccess = () => {
-    setShowAdmissionWizard(false);
-    setPage(1);
-    fetchStudents();
+  const handleAdmitStudent = () => {
+    router.push('/admissions');
   };
 
   const handleSearch = (value) => {
@@ -192,12 +198,12 @@ export default function StudentsPage() {
             </p>
           </div>
           <div className="flex items-center gap-3 mt-4 md:mt-0">
-            <Button variant="outline" className="gap-2">
+            <Button variant="outline" className="gap-2" disabled>
               <Download className="w-4 h-4" />
               Export
             </Button>
             <Button 
-              onClick={() => setShowAdmissionWizard(true)}
+              onClick={handleAdmitStudent}
               className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 gap-2"
             >
               <Plus className="w-4 h-4" />
@@ -211,29 +217,58 @@ export default function StudentsPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
         >
-          {stats.map((stat, index) => (
-            <Card 
-              key={index} 
-              className="hover:shadow-lg transition-all duration-300 cursor-pointer"
-              onClick={stat.action ? () => setShowAdmissionWizard(true) : undefined}
-            >
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                      {stat.name}
-                    </p>
-                    <p className="text-3xl font-bold mt-2">{stat.value}</p>
-                  </div>
-                  <div className={`p-3 rounded-lg bg-gradient-to-br ${stat.color}`}>
-                    <stat.icon className="w-6 h-6 text-white" />
-                  </div>
+          <Card className="hover:shadow-lg transition-all duration-300">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    Total Students
+                  </p>
+                  <p className="text-3xl font-bold mt-2">{totalStudents}</p>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
+                <div className="p-3 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600">
+                  <Users className="w-6 h-6 text-white" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-all duration-300">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    Active Students
+                  </p>
+                  <p className="text-3xl font-bold mt-2">{activeCount}</p>
+                </div>
+                <div className="p-3 rounded-lg bg-gradient-to-br from-green-500 to-green-600">
+                  <Users className="w-6 h-6 text-white" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card 
+            className="hover:shadow-lg transition-all duration-300 cursor-pointer"
+            onClick={handleAdmitStudent}
+          >
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    Quick Action
+                  </p>
+                  <p className="text-lg font-bold mt-2">Add Student</p>
+                </div>
+                <div className="p-3 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600">
+                  <UserPlus className="w-6 h-6 text-white" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </motion.div>
 
         {/* Filters and Search */}
@@ -271,6 +306,7 @@ export default function StudentsPage() {
         {error && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
@@ -284,12 +320,12 @@ export default function StudentsPage() {
           <Card>
             <CardHeader>
               <CardTitle>
-                {loading ? 'Loading...' : totalStudents === 0 ? 'No Students Found' : 'All Students'}
+                {loading ? 'Loading...' : totalStudents === 0 ? 'No Students Yet' : 'All Students'}
               </CardTitle>
               <CardDescription>
                 {totalStudents === 0 
-                  ? "Start by adding a new student using the form above." 
-                  : `Showing ${students.length} of ${totalStudents} students`}
+                  ? "Start by adding a new student using the button above." 
+                  : `Showing ${students.length} of ${totalStudents} student${totalStudents !== 1 ? 's' : ''}`}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -312,7 +348,7 @@ export default function StudentsPage() {
                       : "No students have been added yet. Create your first student record."}
                   </p>
                   <Button 
-                    onClick={() => setShowAdmissionWizard(true)}
+                    onClick={handleAdmitStudent}
                     className="gap-2"
                   >
                     <Plus className="w-4 h-4" />
@@ -326,8 +362,9 @@ export default function StudentsPage() {
                       <TableRow className="bg-gray-50 dark:bg-gray-800">
                         <TableHead>Student</TableHead>
                         <TableHead>Admission No</TableHead>
+                        <TableHead>Class</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead>Admission Date</TableHead>
+                        <TableHead>Enrollment Date</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -345,14 +382,14 @@ export default function StudentsPage() {
                               <Avatar className="w-10 h-10">
                                 <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold">
                                   {formatStudentInitials(
-                                    student.person?.first_name,
-                                    student.person?.last_name
+                                    student.first_name,
+                                    student.last_name
                                   )}
                                 </AvatarFallback>
                               </Avatar>
                               <div>
                                 <p className="font-medium">
-                                  {student.person?.first_name} {student.person?.last_name}
+                                  {student.first_name} {student.last_name}
                                 </p>
                                 <p className="text-sm text-gray-600 dark:text-gray-400">
                                   ID: {student.id}
@@ -361,7 +398,10 @@ export default function StudentsPage() {
                             </div>
                           </TableCell>
                           <TableCell className="font-mono">
-                            {student.admission_no || '-'}
+                            {student.admission_number || '-'}
+                          </TableCell>
+                          <TableCell>
+                            {student.class_name || '-'}
                           </TableCell>
                           <TableCell>
                             <Badge
@@ -376,7 +416,7 @@ export default function StudentsPage() {
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            {formatDate(student.admission_date)}
+                            {formatDate(student.enrollment_date || student.created_at)}
                           </TableCell>
                           <TableCell className="text-right">
                             <DropdownMenu>

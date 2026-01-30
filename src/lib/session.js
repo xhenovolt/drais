@@ -70,6 +70,7 @@ export async function getSession(sessionToken) {
       `SELECT 
          s.session_token,
          s.user_id,
+         s.school_id,
          s.expires_at,
          s.last_activity,
          u.id,
@@ -91,16 +92,25 @@ export async function getSession(sessionToken) {
     }
 
     const row = result.rows[0];
+    
+    // CRITICAL: Verify school_id exists
+    if (!row.school_id) {
+      console.error('[Session] User has no school_id. Session rejected.');
+      return null;
+    }
+    
     return {
       id: row.session_token,
       userId: row.user_id,
       expiresAt: row.expires_at,
       lastActivity: row.last_activity,
+      schoolId: row.school_id,
       user: {
         id: row.id,
         email: row.email,
         role: row.role,
         status: row.status,
+        school_id: row.school_id,
       },
     };
   } catch (error) {

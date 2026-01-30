@@ -141,10 +141,17 @@ export async function getApiAuthUserFromCookies() {
       return null;
     }
 
+    // CRITICAL: Verify school_id is present
+    if (!session.schoolId) {
+      console.error('[ApiAuth] Session missing school_id');
+      return null;
+    }
+
     return {
       userId: session.user.id,
       email: session.user.email,
       role: session.user.role,
+      schoolId: session.schoolId,
     };
   } catch (error) {
     console.error('[ApiAuth] Get auth user from cookies error:', error);
@@ -154,10 +161,10 @@ export async function getApiAuthUserFromCookies() {
 
 /**
  * For use in Route Handlers: Require auth from cookies()
- * Throws 401 if not authenticated
+ * Throws 401 if not authenticated, 403 if user has no school
  * 
- * @returns {Promise<Object>} User object
- * @throws {Error} With status: 401
+ * @returns {Promise<Object>} User object with { userId, email, role, schoolId }
+ * @throws {Error} With status: 401 or 403
  */
 export async function requireApiAuthFromCookies() {
   const user = await getApiAuthUserFromCookies();
@@ -166,6 +173,14 @@ export async function requireApiAuthFromCookies() {
     error.status = 401;
     throw error;
   }
+  
+  // CRITICAL: Verify user has school context
+  if (!user.schoolId) {
+    const error = new Error('School context not configured. Please complete school setup.');
+    error.status = 403;
+    throw error;
+  }
+  
   return user;
 }
 
