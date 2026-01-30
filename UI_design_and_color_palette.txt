@@ -1,0 +1,123 @@
+DRAIS UI Design & Color Palette
+================================
+
+Summary
+-------
+- Design system: Tailwind CSS utility-first with CSS custom properties (design tokens) defined in `src/app/globals.css`.
+- Theme switching: client-side dark/light toggle via `document.documentElement.classList.toggle('dark')` in `src/components/theme-provider.jsx`.
+- Typography: custom `Geist` font family provided via `@font-face`; tokens `--font-geist-sans` and `--font-geist-mono` used as defaults.
+- Tokens: colors, radii, chart colors, ring/input/border tokens are exposed as CSS variables for use inside Tailwind via mapping in `globals.css`.
+
+How to reuse
+------------
+- Copy the `:root` and `.dark` CSS variable blocks from `src/app/globals.css` into your project's global stylesheet.
+- Provide the same font `@font-face` or replace `--font-geist-sans` / `--font-geist-mono` with your fonts.
+- Keep the `ThemeProvider` approach (or adapt) to toggle the `dark` class on the document root for dark mode.
+- Tailwind integration: this project uses Tailwind and maps many Tailwind tokens to CSS variables. Keep the mapping lines (see top of `globals.css`) if you want parity.
+
+Design Tokens (copyable)
+------------------------
+/* Radii */
+--radius: 0.625rem;
+--radius-sm: calc(var(--radius) - 4px);
+--radius-md: calc(var(--radius) - 2px);
+--radius-lg: var(--radius);
+--radius-xl: calc(var(--radius) + 4px);
+
+/* Theme tokens (light) - from :root */
+--background: oklch(1 0 0);
+--foreground: oklch(0.145 0 0);
+--card: oklch(1 0 0);
+--card-foreground: oklch(0.145 0 0);
+--popover: oklch(1 0 0);
+--popover-foreground: oklch(0.145 0 0);
+--primary: oklch(0.205 0 0);
+--primary-foreground: oklch(0.985 0 0);
+--secondary: oklch(0.97 0 0);
+--secondary-foreground: oklch(0.205 0 0);
+--muted: oklch(0.97 0 0);
+--muted-foreground: oklch(0.556 0 0);
+--accent: oklch(0.97 0 0);
+--accent-foreground: oklch(0.205 0 0);
+--destructive: oklch(0.577 0.245 27.325);
+--border: oklch(0.922 0 0);
+--input: oklch(0.922 0 0);
+--ring: oklch(0.708 0 0);
+
+/* Chart tokens (light) */
+--chart-1: oklch(0.646 0.222 41.116);
+--chart-2: oklch(0.6 0.118 184.704);
+--chart-3: oklch(0.398 0.07 227.392);
+--chart-4: oklch(0.828 0.189 84.429);
+--chart-5: oklch(0.769 0.188 70.08);
+
+/* Dark theme overrides (copy `.dark { ... }`) */
+--background: oklch(0.145 0 0);
+--foreground: oklch(0.985 0 0);
+--card: oklch(0.205 0 0);
+--card-foreground: oklch(0.985 0 0);
+--primary: oklch(0.922 0 0);
+--primary-foreground: oklch(0.205 0 0);
+--secondary: oklch(0.269 0 0);
+--secondary-foreground: oklch(0.985 0 0);
+--muted: oklch(0.269 0 0);
+--muted-foreground: oklch(0.708 0 0);
+--accent: oklch(0.269 0 0);
+--accent-foreground: oklch(0.985 0 0);
+--destructive: oklch(0.704 0.191 22.216);
+--border: oklch(1 0 0 / 10%);
+--input: oklch(1 0 0 / 15%);
+--ring: oklch(0.556 0 0);
+
+Named Hex Palettes (used around the app and in logo)
+--------------------------------------------------
+/* Earth palette */
+--color-earth-dark: #606c38;
+--color-earth-darker: #283618;
+--color-earth-light: #fefae0;
+--color-earth-gold: #dda15e;
+--color-earth-bronze: #bc6c25;
+
+/* Accent / Brights */
+--color-amber-gold: #ffbe0b;
+--color-blaze-orange: #fb5607;
+--color-neon-pink: #ff006e;
+--color-blue-violet: #8338ec;
+--color-azure-blue: #3a86ff;
+
+/* Ocean shades */
+--color-ocean-700: #0466c8;
+--color-ocean-800: #0353a4;
+--color-ocean-850: #023e7d;
+--color-ocean-900: #002855;
+--color-ocean-950: #001845;
+
+Logo Gradient Stops (from `src/components/drais-logo.jsx`)
+------------------------------------------------------
+gradient1 stops: #0466c8 -> #3a86ff -> #8338ec
+accent-gradient stops: #ffbe0b -> #fb5607
+
+Example gradient CSS:
+linear-gradient(90deg, #0466c8 0%, #3a86ff 50%, #8338ec 100%)
+linear-gradient(180deg, #ffbe0b 0%, #fb5607 100%)
+
+Other notes / patterns
+----------------------
+- Utilities: components and small UI primitives are built with Tailwind utility classes (see many `className` usages in `src/`), and some components rely on token names `bg-primary`, `text-primary-foreground`, `bg-accent`, `border-input`, etc.; mapping is present at the top of `globals.css` under `@theme inline { ... }`.
+- Icons & SVGs: `DraisLogo` provides SVGs with gradients. Use the provided hex stops for consistent brand accents.
+- Charts: use the `--chart-*` tokens for consistent chart palettes; they are defined in oklch for perceptual uniformity.
+- Accessibility: primary/foreground tokens are inverted in dark mode; keep those pairs when reusing to preserve contrast behavior.
+
+Minimal copy snippet (drop into your global CSS)
+----------------------------------------------
+:root { /* paste the :root block from src/app/globals.css */ }
+.dark { /* paste the .dark block from src/app/globals.css */ }
+
+If you want, I can:
+- Convert the oklch tokens to hex equivalents for environments that don't support `oklch`.
+- Generate a small CSS/SCSS file and a minimal Tailwind config with these tokens wired in.
+
+File references extracted from source:
+- src/app/globals.css
+- src/components/theme-provider.jsx
+- src/components/drais-logo.jsx

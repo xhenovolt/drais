@@ -1,0 +1,14 @@
+  column_name   |          data_type          
+----------------+-----------------------------
+ id             | uuid
+ user_id        | bigint
+ ip_address     | character varying
+ user_agent     | text
+ created_at     | timestamp without time zone
+ last_activity  | timestamp without time zone
+ expires_at     | timestamp without time zone
+ stay_logged_in | boolean
+ is_active      | boolean
+ logged_out_at  | timestamp without time zone
+(10 rows)
+

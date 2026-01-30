@@ -1,6 +1,7 @@
 "use client";
 
 import DashboardLayout from "@/components/dashboard-layout";
+import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,9 +26,68 @@ import {
 } from "lucide-react";
 
 export default function SettingsPage() {
+  const { user } = useAuth();
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
+        {/* School Identity Card */}
+        {user?.isOnboardingComplete && user?.school_name ? (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-2 border-blue-200 dark:border-blue-800 rounded-xl p-6"
+          >
+            <div className="flex flex-col md:flex-row md:items-center gap-6">
+              {/* School Badge */}
+              <div className="flex-shrink-0">
+                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg">
+                  <span className="text-2xl font-bold text-white">
+                    {user.school_name
+                      .split(" ")
+                      .map((word) => word[0])
+                      .join("")
+                      .toUpperCase()
+                      .slice(0, 2)}
+                  </span>
+                </div>
+              </div>
+
+              {/* School Info */}
+              <div className="flex-1">
+                <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide">
+                  Current School
+                </p>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                  {user.school_name}
+                </h2>
+                <div className="flex flex-wrap gap-2 mt-3">
+                  <Badge variant="secondary" className="gap-1">
+                    <School className="w-3 h-3" />
+                    Configured
+                  </Badge>
+                  <Badge variant="secondary" className="gap-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-green-300 dark:border-green-700">
+                    <span className="w-2 h-2 rounded-full bg-green-600 dark:bg-green-400" />
+                    Active
+                  </Badge>
+                </div>
+              </div>
+
+              {/* Address Info */}
+              {user.school_address ? (
+                <div className="flex-1">
+                  <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                    Location
+                  </p>
+                  <p className="text-sm text-gray-700 dark:text-gray-300 mt-1 line-clamp-2">
+                    {user.school_address}
+                  </p>
+                </div>
+              ) : null}
+            </div>
+          </motion.div>
+        ) : null}
+
         {/* Page Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}

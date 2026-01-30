@@ -1,0 +1,1328 @@
+================================================================================
+DRAIS VERSION 3 UI REPLICATION PROMPT FOR VERSION 2 AI AGENT
+================================================================================
+Date: January 11, 2026
+Target: Replicate Version 3 UI design, layout, components, navigation, and interactions in Version 2
+Status: Ready for AI-powered implementation
+
+================================================================================
+PHASE 0: OVERVIEW & CONTEXT
+================================================================================
+
+Version 3 (current production) uses:
+- Framework: Next.js (App Router)
+- Styling: TailwindCSS v4 with custom tokens
+- Components: Radix UI primitives + custom Tailwind components
+- Animation: Framer Motion
+- Typography: Geist Sans & Geist Mono fonts
+- Color System: oklch color space with CSS custom properties
+- Version: v0.0.0018 (latest stable)
+
+Your Task: Replicate Version 3's UI/UX completely in Version 2 so that both projects
+have visual parity, consistent navigation, same components, and matching responsiveness.
+
+Key File References (in Version 3):
+- Layout Shell: src/components/dashboard-layout.jsx
+- Sidebars: src/components/tahfiz-sidebar.jsx
+- Navbars: src/components/tahfiz-navbar.jsx
+- Search: src/components/enhanced-search-bar.jsx
+- Theme: src/components/theme-provider.jsx
+- Globals CSS: src/app/globals.css
+- UI Primitives: src/components/ui/ (button, card, input, dropdown-menu, etc.)
+
+================================================================================
+PHASE 1: DESIGN SYSTEM & TOKENS (Foundation)
+================================================================================
+
+COLOR PALETTE (oklch color space):
+- Light Mode (Root):
+  --background: oklch(1 0 0) [white]
+  --foreground: oklch(0.145 0 0) [nearly black]
+  --card: oklch(1 0 0) [white]
+  --primary: oklch(0.205 0 0) [dark gray/charcoal]
+  --primary-foreground: oklch(0.985 0 0) [off-white]
+  --secondary: oklch(0.97 0 0) [very light gray]
+  --accent: oklch(0.97 0 0) [very light gray]
+  --muted: oklch(0.97 0 0) [very light gray]
+  --muted-foreground: oklch(0.556 0 0) [medium gray]
+  --destructive: oklch(0.577 0.245 27.325) [red]
+  --border: oklch(0.922 0 0) [light gray]
+  --sidebar: oklch(0.985 0 0) [white]
+  --sidebar-foreground: oklch(0.145 0 0) [nearly black]
+  --sidebar-primary: oklch(0.205 0 0) [dark gray]
+
+- Dark Mode (.dark class):
+  --background: oklch(0.145 0 0) [very dark gray]
+  --foreground: oklch(0.985 0 0) [off-white]
+  --card: oklch(0.205 0 0) [dark gray]
+  --primary: oklch(0.922 0 0) [light gray]
+  --primary-foreground: oklch(0.205 0 0) [dark gray]
+  --secondary: oklch(0.269 0 0) [dark secondary]
+  --sidebar: oklch(0.205 0 0) [dark gray]
+  --sidebar-foreground: oklch(0.985 0 0) [off-white]
+
+BRANDED ACCENT COLORS (used for active states and module highlights):
+  --color-earth-dark: #606c38 (earth dark green)
+  --color-earth-darker: #283618 (forest green)
+  --color-earth-light: #fefae0 (cream)
+  --color-earth-gold: #dda15e (golden brown)
+  --color-earth-bronze: #bc6c25 (bronze)
+  --color-amber-gold: #ffbe0b (vibrant gold)
+  --color-blaze-orange: #fb5607 (orange)
+  --color-neon-pink: #ff006e (pink)
+  --color-blue-violet: #8338ec (purple)
+  --color-azure-blue: #3a86ff (bright blue)
+  --color-ocean-700: #0466c8 (ocean blue)
+  --color-ocean-800: #0353a4
+  --color-ocean-850: #023e7d
+  --color-ocean-900: #002855
+  --color-ocean-950: #001845
+
+PRIMARY ACTIVE GRADIENT (used for active nav items, buttons, etc.):
+  from-blue-600 to-purple-600
+  Hex equiv: #2563eb to #9333ea
+
+SPACING SYSTEM:
+  --radius: 0.625rem (10px, base border-radius)
+  --radius-sm: calc(var(--radius) - 4px) [6px]
+  --radius-md: calc(var(--radius) - 2px) [8px]
+  --radius-lg: var(--radius) [10px]
+  --radius-xl: calc(var(--radius) + 4px) [14px]
+
+TYPOGRAPHY:
+  Font Families: Geist Sans (primary), Geist Mono (code)
+  Base font size: 16px (mobile), 16px (desktop)
+  Use Tailwind's text-xs, text-sm, text-base, text-lg, text-xl for sizing
+  Font weights: 400 (regular), 500 (medium), 600 (semibold), 700 (bold)
+
+VISUAL EFFECTS & GLASS MORPHISM:
+  Header/Nav: bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg
+  Sidebar: bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg
+  Creates a frosted-glass effect with transparency + blur
+
+FOCUS & ACCESSIBILITY (ring system):
+  focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]
+  Applied to all interactive elements (buttons, inputs, dropdowns)
+  Ensures WCAG AA contrast and visible keyboard focus
+
+RESPONSIVE BREAKPOINTS (Tailwind):
+  sm: 640px
+  md: 768px
+  lg: 1024px (main breakpoint for desktop sidebar toggle)
+  xl: 1280px
+  2xl: 1536px
+
+Implementation Instructions:
+1. Create a global CSS file with :root and .dark class defining all token values above
+2. Use CSS custom properties throughout to enable easy theme switching
+3. Ensure dark mode is enabled by adding .dark class to document.documentElement
+4. Use Tailwind's color palette configuration to map these tokens to utility classes
+
+================================================================================
+PHASE 2: CORE UI COMPONENTS (Reusable Building Blocks)
+================================================================================
+
+All components should be located in src/components/ui/ directory.
+
+BUTTON (src/components/ui/button.jsx):
+  Purpose: Primary interactive element across the app
+  Variants: default, destructive, outline, secondary, ghost, link
+  Sizes: default (h-9, px-4), sm (h-8, px-3), lg (h-10, px-6), icon (size-9)
+  Features:
+    - Disabled state: pointer-events-none, opacity-50
+    - SVG sizing: size-4 by default with custom support
+    - Focus visible: ring-ring/50 ring-[3px]
+    - Smooth transition-all
+    - Hover states: color/background changes per variant
+  Implementation: Use class-variance-authority (cva) for variants
+  Example Active State:
+    bg-primary text-primary-foreground hover:bg-primary/90
+
+CARD (src/components/ui/card.jsx):
+  Purpose: Container for grouped content
+  Structure: Card > CardHeader > CardTitle + CardDescription; CardContent; CardFooter
+  Default Classes:
+    bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm
+  Responsive: px-6 for desktop padding, can be overridden
+  Dark Mode: Uses card token which swaps to dark color in .dark mode
+
+INPUT (src/components/ui/input.jsx):
+  Purpose: Text fields, email, number, etc.
+  Classes:
+    h-9 px-3 py-1 rounded-md border bg-transparent
+    focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]
+    aria-invalid:border-destructive aria-invalid:ring-destructive/20
+  Placeholder text: text-muted-foreground
+  File upload support with custom styling
+  Dark mode: dark:bg-input/30 for subtle background
+
+DROPDOWN-MENU (src/components/ui/dropdown-menu.jsx):
+  Purpose: User menus, action menus, contextual options
+  Components: DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, etc.
+  Animation: zoom-in-95, fade-in-0 when open; zoom-out-95, fade-out-0 when closed
+  Styling: bg-popover text-popover-foreground, p-1, rounded-md, shadow-md
+  Items: cursor-default, px-2 py-1.5, focus:bg-accent, text-sm
+  Accessibility: Uses Radix UI for ARIA attributes
+
+AVATAR (src/components/ui/avatar.jsx):
+  Purpose: User profile pictures, initials
+  Default: w-8 h-8 or w-10 h-10 sizes
+  Example: bg-gradient-to-r from-blue-600 to-purple-600 text-white
+  Fallback text shown when image unavailable
+
+TABS (src/components/ui/tabs.jsx):
+  Purpose: Tabbed interfaces for multi-section content
+  Uses: Radix Tabs Primitive
+  Active tab: underline or background highlight
+  Keyboard: Arrow keys to navigate tabs
+
+TABLE (src/components/ui/table.jsx):
+  Purpose: Structured data display
+  Structure: Table > TableHeader > TableRow > TableHead; TableBody > TableRow > TableCell
+  Borders: border-b between rows, border-r between columns
+  Responsive: overflow-x-auto wrapper for mobile
+  Striped: alternate-rows with subtle background
+
+SELECT, CHECKBOX, SWITCH, SLIDER, TEXTAREA:
+  Location: src/components/ui/
+  Purpose: Form controls
+  All follow same pattern: accessible Radix primitives + Tailwind styling
+  Include dark mode variants and focus-visible states
+
+Implementation Instructions:
+1. Copy all files from Version 3's src/components/ui/ to Version 2's src/components/ui/
+2. If Version 2 already has these files, compare and merge Tailwind classes and Radix primitives
+3. Ensure each component exports properly and uses cn() utility for class merging
+4. Add missing variants (e.g., if a button has new sizes, add them)
+5. Test each component in isolation before integration
+
+================================================================================
+PHASE 3: LAYOUT SHELL (App Structure)
+================================================================================
+
+MAIN SHELL COMPONENT: DashboardLayout (src/components/dashboard-layout.jsx)
+
+Purpose: Global wrapper for all authenticated routes; manages navigation state, theme, modals
+
+LAYOUT STRUCTURE:
+  <div className="min-h-screen bg-gradient-to-br from-blue-50 via-slate-50 to-purple-50 dark:bg-gradient-to-bl dark:from-blue-950 dark:via-gray-950 dark:to-purple-950">
+    1. DESKTOP SIDEBAR (hidden on lg:hidden)
+    2. MOBILE DRAWER OVERLAY + SIDEBAR (fixed, slide-in animation)
+    3. MAIN CONTENT AREA (flex column with header + content)
+    4. MOBILE BOTTOM NAVBAR (fixed bottom, lg:hidden)
+  </div>
+
+COMPONENT 1: DESKTOP SIDEBAR
+  Visibility: hidden on <lg (hidden lg:fixed lg:inset-y-0 lg:flex)
+  Width: 64 (w-64, 16rem)
+  Position: fixed left column, full viewport height
+  Styling:
+    bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg
+    border-r border-gray-200 dark:border-gray-800
+    flex flex-col flex-grow overflow-y-auto
+  
+  LOGO AREA (top, height 64px / h-16):
+    flex items-center gap-3 px-6 border-b
+    Content: DraisLogo icon (8x8) + "DRAIS" text gradient + version badge
+    Gradient text: bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent
+    Version text: text-xs text-gray-500 dark:text-gray-400
+  
+  NAVIGATION SECTION (flex-1, scrollable):
+    Structure: navigationGroups array (see NAVIGATION DATA below)
+    Groups with single item (Overview/Dashboard):
+      Link to item.href
+      Hover animation: scale-1.02, x-4 (via motion.div whileHover)
+      Active state: bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg
+    
+    Groups with multiple items (Students, Financial, Tahfiz, etc.):
+      Collapsible button with ChevronRight icon
+      Button styling: text-sm font-semibold
+      Hover: bg-gray-100 dark:hover:bg-gray-800
+      Children shown when group expanded: ml-4 border-l-2 border-gray-200 dark:border-gray-700 pl-3
+      Child item classes:
+        Active: bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md
+        Inactive: text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800
+      Animations: Framer Motion AnimatePresence with height/opacity transitions (200ms)
+  
+  BEHAVIOR: Single-open group (closing other groups when one opens)
+    - State: expandedGroups = ["Overview"] (default open)
+    - Logic: toggle toggles open/close; clicking group switches to only that group
+
+COMPONENT 2: MOBILE DRAWER (shown on <lg screens when sidebarOpen === true)
+  Overlay: fixed inset-0 bg-black/50 z-40 (click to close)
+  Drawer: motion.aside
+    Initial: x-(-300) (off-screen left)
+    Animate: x-0 (visible)
+    Exit: x-(-300) (slide out)
+    Transition: spring (damping: 30) for smooth motion
+    Width: w-64, fixed left, full height, z-50, overflow-y-auto
+    Styling: bg-white dark:bg-gray-900
+  
+  CLOSE BUTTON: top-right corner, X icon
+    Styling: variant=ghost, size=icon
+  
+  NAVIGATION: Same structure as desktop sidebar but inside drawer
+  
+  BEHAVIOR: Close drawer when overlay clicked or item clicked
+
+COMPONENT 3: TOP HEADER (sticky top, height 64px / h-16)
+  Position: sticky top-0 z-30
+  Styling: bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg border-b border-gray-200 dark:border-gray-800
+  Layout: flex items-center justify-between px-4 lg:px-8
+  
+  LEFT SECTION:
+    Menu button (lg:hidden): variant=ghost, size=icon, onClick={() => setSidebarOpen(true)}
+      Icon: Menu (lucide-react)
+      Shows/hides mobile drawer
+  
+  CENTER SECTION (hidden md:flex):
+    Enhanced Search Bar (full implementation below in COMPONENT 4)
+    max-w-md flex-1
+  
+  RIGHT SECTION (flex items-center gap-2):
+    Theme Toggle Button:
+      variant=ghost, size=icon, rounded-full
+      Icon: Moon (dark mode) or Sun (light mode)
+      onClick: toggleTheme()
+    
+    Notifications Button:
+      variant=ghost, size=icon, rounded-full, relative
+      Icon: Bell
+      Badge: absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full (indicates unread)
+    
+    User Menu Dropdown:
+      Trigger: variant=ghost, flex items-center gap-2
+        Avatar: w-8 h-8, gradient bg with initials (e.g., "AD")
+        Text (hidden md:inline): "Admin" (text-sm)
+        ChevronDown icon (w-4 h-4)
+      
+      Content: w-56, align=end (right-aligned)
+        Label: "My Account"
+        Separator
+        Item: Profile (User icon)
+        Item: Settings (Settings icon)
+        Separator
+        Item: Logout (LogOut icon, text-red-600)
+
+COMPONENT 4: ENHANCED SEARCH BAR
+  Location: src/components/enhanced-search-bar.jsx
+  Purpose: Global search for routes with autocomplete
+  
+  STRUCTURE:
+    Input field with Search icon
+    Placeholder: "Search features, pages, modules..."
+    Keyboard navigation: ↑ ↓ for navigate, Enter to select, Esc to close
+  
+  BEHAVIOR:
+    User types: filters searchableRoutes array
+    Results shown: up to 5 matches in dropdown
+    Result item styling:
+      Unselected: hover:bg-gray-100 dark:hover:bg-gray-700
+      Selected: bg-gradient-to-r from-blue-500 to-purple-500 text-white
+      Content: [Route Name] | [Category] | [Route Path]
+    
+    Click result or press Enter: navigate to route via router.push()
+  
+  SEARCHABLE ROUTES: Full list in NAVIGATION DATA section
+    Each route has: name, route path, category, keywords array
+    Search matches: name, category, or any keyword
+  
+  KEYBOARD SHORTCUTS:
+    ↑ / ↓: Navigate results
+    Enter: Select highlighted result
+    Esc: Close dropdown
+    Cmd/Ctrl + K: (optional) focus search from anywhere
+  
+  HIGHLIGHTING: Matched text is highlighted in yellow (bg-yellow-200 dark:bg-yellow-800)
+
+COMPONENT 5: MAIN CONTENT AREA
+  Layout: lg:pl-64 flex flex-col min-h-screen
+    pl-64 for desktop (makes room for sidebar)
+    No left padding on mobile
+  
+  Inner structure:
+    1. Top Header (sticky, z-30)
+    2. <main> tag: flex-1 p-4 lg:p-8 pb-20 lg:pb-8
+       pb-20 for mobile (to avoid being covered by bottom nav)
+       pb-8 for desktop
+       Animated entry: motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}
+    3. Floating Chatbot (fixed position, bottom-right)
+
+COMPONENT 6: MOBILE BOTTOM NAVBAR (fixed bottom, lg:hidden)
+  Position: lg:hidden fixed bottom-0 left-0 right-0 z-30
+  Height: 64px (h-16)
+  Styling: bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800
+  
+  NAVIGATION ITEMS (mobileNavigation array):
+    Dashboard -> /dashboard
+    Students -> /students
+    Attendance -> /attendance
+    Payments -> /payments
+  
+  LAYOUT: flex items-center justify-around h-16 px-2
+    Each item: flex-1, flex flex-col items-center gap-1 py-2
+  
+  ACTIVE STATE:
+    Active: text-blue-600 dark:text-blue-400
+    Inactive: text-gray-600 dark:text-gray-400
+  
+  ITEM STRUCTURE:
+    Icon: w-6 h-6
+    Label: text-xs font-medium
+    Animation on tap: motion.div whileTap={{ scale: 0.9 }}
+
+COMPONENT 7: FLOATING CHATBOT
+  Location: src/components/floating-chatbot.jsx (already exists in V3, can be copied)
+  Purpose: AI assistant icon, bottom-right corner, opens/closes chat modal
+  Position: fixed bottom-6 right-6 z-50
+  Styling: gradient background with icon
+  Behavior: click to toggle chat window
+
+COMPONENT 8: OPTIONAL MODALS (already exist in V3, can be copied as-is)
+  - WhatsNewModal: shows new features/updates
+  - AIRecommendationModals: contextual AI recommendations
+  - CookieConsentBanner: cookie compliance banner
+
+STATE MANAGEMENT (DashboardLayout.jsx):
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState(["Overview"]);
+  const pathname = usePathname();
+  const { theme, toggleTheme } = useTheme();
+  
+  Helper function:
+    const isActive = (href) => pathname === href;
+    For multi-level nav:
+      const toggleGroup = (groupName) => {
+        if (expandedGroups.includes(groupName)) {
+          return expanded.filter(g => g !== groupName);
+        }
+        return [groupName]; // single open
+      }
+
+Implementation Instructions:
+1. Create src/components/dashboard-layout.jsx with all components above
+2. Import necessary components: motion from framer-motion, icons from lucide-react, UI components from ui/
+3. Export default DashboardLayout
+4. Wrap your app layout with <DashboardLayout>{children}</DashboardLayout>
+5. Ensure usePathname() and useRouter() work (requires Next.js app router)
+6. Test all interactions: sidebar toggle, group expand/collapse, mobile drawer, theme toggle, search
+
+================================================================================
+PHASE 4: NAVIGATION DATA STRUCTURE
+================================================================================
+
+navigationGroups Array (src/constants/navigation.js or inline in DashboardLayout):
+
+This structure defines ALL navigation items visible in sidebar and search.
+Each group has a name, optional icon, and array of items.
+Single-item groups collapse straight to the link.
+Multi-item groups show as collapsible.
+
+STRUCTURE:
+const navigationGroups = [
+  {
+    name: "Overview",
+    items: [
+      { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+    ],
+  },
+  {
+    name: "Students",
+    icon: Users,
+    items: [
+      { name: "All Students", href: "/students", icon: Users },
+      { name: "Admissions", href: "/students/admission", icon: UserPlus },
+      { name: "ID Cards", href: "/students/id-cards", icon: IdCard },
+      { name: "Pocket Money", href: "/students/pocket-money", icon: Wallet },
+      { name: "Promote Students", href: "/students/promote", icon: ArrowUpCircle },
+      { name: "Alumni", href: "/students/alumni", icon: UserCircle },
+      { name: "Discipline", href: "/students/discipline", icon: AlertTriangle },
+      { name: "Suspended", href: "/students/suspended", icon: ShieldAlert },
+      { name: "Import Students", href: "/students/import", icon: Upload },
+    ],
+  },
+  {
+    name: "Financial",
+    icon: DollarSign,
+    items: [
+      { name: "Fees Management", href: "/fees", icon: DollarSign },
+      { name: "Payments", href: "/payments", icon: CreditCard },
+      { name: "MTN Mobile Money", href: "/payments/mtn-momo", icon: CreditCard },
+      { name: "Airtel Money", href: "/payments/airtel-momo", icon: CreditCard },
+      { name: "Transactions", href: "/transactions", icon: Receipt },
+      { name: "Financial Reports", href: "/financial-reports", icon: TrendingUp },
+    ],
+  },
+  {
+    name: "Academic",
+    icon: GraduationCap,
+    items: [
+      { name: "Classes", href: "/classes", icon: GraduationCap },
+      { name: "Subjects", href: "/subjects", icon: BookOpen },
+      { name: "Exams", href: "/exams", icon: ClipboardList },
+      { name: "Timetable", href: "/timetable", icon: Clock },
+      { name: "Performance", href: "/performance", icon: Award },
+    ],
+  },
+  {
+    name: "Examinations",
+    icon: ClipboardList,
+    items: [
+      { name: "Exams Dashboard", href: "/exams/dashboard", icon: LayoutDashboard },
+      { name: "Create Exam", href: "/exams/create", icon: FileEdit },
+      { name: "Question Bank", href: "/exams/question-bank", icon: BookOpen },
+      { name: "Schedule Calendar", href: "/exams/schedule", icon: Calendar },
+      { name: "Monitoring", href: "/exams/monitoring", icon: Activity },
+      { name: "Results & Grading", href: "/exams/results", icon: Award },
+      { name: "Advanced Settings", href: "/exams/settings", icon: Settings },
+      { name: "Bulk Actions", href: "/exams/bulk-actions", icon: Upload },
+      { name: "Analytics & Reports", href: "/exams/analytics", icon: BarChart3 },
+      { name: "Notifications", href: "/exams/notifications", icon: Bell },
+      { name: "Cloning & Reuse", href: "/exams/cloning", icon: FileText },
+      { name: "Security & Permissions", href: "/exams/permissions", icon: Shield },
+    ],
+  },
+  {
+    name: "Grading & Feedback",
+    icon: Award,
+    items: [
+      { name: "Grading Dashboard", href: "/exams/grading", icon: LayoutDashboard },
+      { name: "Grade Analytics", href: "/exams/grade-analytics", icon: BarChart3 },
+      { name: "Feedback Templates", href: "/exams/feedback-templates", icon: FileText },
+      { name: "Student Results", href: "/exams/results/student-portal", icon: Users },
+    ],
+  },
+  {
+    name: "Tahfiz",
+    icon: BookOpen,
+    items: [
+      { name: "Dashboard", href: "/tahfiz/dashboard", icon: LayoutDashboard },
+      { name: "Recitation Practice", href: "/tahfiz/practice", icon: Activity },
+      { name: "Interactive Quiz", href: "/tahfiz/quiz", icon: Brain },
+      { name: "AI Feedback", href: "/tahfiz/ai-feedback", icon: Sparkles },
+      { name: "History", href: "/tahfiz/history", icon: Clock },
+      { name: "Progress & Rewards", href: "/tahfiz/progress", icon: Award },
+      { name: "Leaderboards", href: "/tahfiz/leaderboards", icon: Target },
+      { name: "Analytics", href: "/tahfiz/analytics", icon: BarChart3 },
+      { name: "Students", href: "/tahfiz/students", icon: Users },
+      { name: "Halaqa Sessions", href: "/tahfiz/halaqa", icon: UserCheck },
+      { name: "Assessments", href: "/tahfiz/assessments", icon: ClipboardList },
+      { name: "Settings", href: "/tahfiz/settings", icon: Settings },
+    ],
+  },
+  {
+    name: "Library",
+    icon: Library,
+    items: [
+      { name: "Categories", href: "/library/categories", icon: Grid3x3 },
+      { name: "All Books", href: "/library/books", icon: BookOpen },
+      { name: "Borrowed Books", href: "/library/borrow", icon: Calendar },
+    ],
+  },
+  {
+    name: "Attendance",
+    icon: Calendar,
+    items: [
+      { name: "Mark Attendance", href: "/attendance", icon: Calendar },
+      { name: "Biometric Attendance", href: "/attendance/biometric", icon: UserCheck },
+      { name: "Attendance Reports", href: "/attendance-reports", icon: FileText },
+    ],
+  },
+  {
+    name: "AI Insights",
+    icon: Sparkles,
+    items: [
+      { name: "AI Dashboard", href: "/ai-insights", icon: Sparkles },
+      { name: "Student Performance", href: "/ai-student-performance", icon: Target },
+      { name: "Finance Predictions", href: "/ai-finance", icon: TrendingUp },
+      { name: "Attendance Analytics", href: "/ai-attendance", icon: Calendar },
+    ],
+  },
+  {
+    name: "AI Teacher",
+    icon: Bot,
+    items: [
+      { name: "Assistant Dashboard", href: "/ai-teacher", icon: Bot },
+      { name: "Lesson Plans", href: "/ai-teacher/lesson-plans", icon: BookMarked },
+      { name: "Recommendations", href: "/ai-teacher/recommendations", icon: Lightbulb },
+    ],
+  },
+  {
+    name: "AI Copilot",
+    icon: Brain,
+    items: [
+      { name: "Copilot Dashboard", href: "/ai-copilot", icon: Brain },
+      { name: "Decision Insights", href: "/ai-copilot/insights", icon: Lightbulb },
+    ],
+  },
+  {
+    name: "Communication",
+    icon: MessageSquare,
+    items: [
+      { name: "Announcements", href: "/communication", icon: Bell },
+    ],
+  },
+  {
+    name: "Messaging",
+    icon: Mail,
+    items: [
+      { name: "Inbox", href: "/messaging/inbox", icon: Mail },
+      { name: "Compose", href: "/messaging/compose", icon: Send },
+      { name: "Groups", href: "/messaging/groups", icon: Users },
+    ],
+  },
+  {
+    name: "Reports",
+    icon: FileText,
+    items: [
+      { name: "All Reports", href: "/reports", icon: FileText },
+      { name: "Analytics Dashboard", href: "/analytics", icon: BarChart3 },
+      { name: "Advanced Analytics", href: "/analytics/advanced", icon: Brain },
+      { name: "Financial Reports", href: "/reports/finance", icon: DollarSign },
+      { name: "Academic Reports", href: "/reports/academic", icon: GraduationCap },
+      { name: "Student Performance", href: "/analytics/student-performance", icon: Target },
+      { name: "Attendance Trends", href: "/analytics/attendance-trends", icon: Calendar },
+    ],
+  },
+  {
+    name: "Operations",
+    icon: Activity,
+    items: [
+      { name: "Operations Dashboard", href: "/operations/dashboard", icon: Activity },
+    ],
+  },
+  {
+    name: "DRAIS Kitchen",
+    icon: Sparkles,
+    items: [
+      { name: "Kitchen Home", href: "/kitchen", icon: Sparkles },
+      { name: "Theme Builder", href: "/kitchen/themes", icon: Settings },
+      { name: "Color Palettes", href: "/kitchen/palettes", icon: Lightbulb },
+      { name: "Font Manager", href: "/kitchen/fonts", icon: FileText },
+      { name: "Component Styler", href: "/kitchen/components", icon: Grid3x3 },
+      { name: "Report Designer", href: "/kitchen/reports-designer", icon: FileText },
+      { name: "Email Templates", href: "/kitchen/email-templates", icon: Mail },
+      { name: "SMS Templates", href: "/kitchen/sms-templates", icon: MessageSquare },
+      { name: "Export & Presets", href: "/kitchen/export", icon: Upload },
+      { name: "History & Audit", href: "/kitchen/history", icon: Clock },
+      { name: "Permissions", href: "/kitchen/permissions", icon: Shield },
+      { name: "Tahfiz Styling", href: "/kitchen/tahfiz", icon: BookOpen },
+      { name: "Live Preview", href: "/kitchen/live-preview", icon: Activity },
+      { name: "Getting Started", href: "/kitchen/getting-started", icon: Brain },
+    ],
+  },
+  {
+    name: "Bulk Operations",
+    icon: Upload,
+    items: [
+      { name: "Bulk Student Update", href: "/bulk/students", icon: Users },
+      { name: "Bulk Fee Adjustments", href: "/bulk/fees", icon: DollarSign },
+      { name: "Bulk Promotions", href: "/bulk/promotions", icon: ArrowUpCircle },
+      { name: "Bulk Attendance Import", href: "/bulk/attendance", icon: UserCheck },
+    ],
+  },
+  {
+    name: "Teacher Portal",
+    icon: GraduationCap,
+    items: [
+      { name: "Teacher Dashboard", href: "/teacher/dashboard", icon: LayoutDashboard },
+      { name: "My Classes", href: "/teacher/classes", icon: Users },
+      { name: "Take Attendance", href: "/teacher/attendance", icon: UserCheck },
+      { name: "Enter Marks", href: "/teacher/marks-entry", icon: FileEdit },
+      { name: "Messages", href: "/teacher/messages", icon: MessageSquare },
+      { name: "My Profile", href: "/teacher/profile", icon: User },
+    ],
+  },
+  {
+    name: "Parent Portal",
+    icon: Users,
+    items: [
+      { name: "Parent Dashboard", href: "/parent/dashboard", icon: LayoutDashboard },
+      { name: "My Children", href: "/parent/children", icon: Users },
+      { name: "Fees & Payments", href: "/parent/fees", icon: DollarSign },
+      { name: "Exam Results", href: "/parent/results", icon: Award },
+      { name: "Attendance", href: "/parent/attendance", icon: Calendar },
+      { name: "Messages", href: "/parent/messages", icon: MessageSquare },
+    ],
+  },
+  {
+    name: "Multi-School Admin",
+    icon: Grid3x3,
+    items: [
+      { name: "Overview", href: "/multi-school/overview", icon: LayoutDashboard },
+      { name: "Manage Schools", href: "/multi-school/schools", icon: GraduationCap },
+      { name: "Consolidated Reports", href: "/multi-school/reports", icon: FileText },
+    ],
+  },
+  {
+    name: "Administration",
+    icon: Settings,
+    items: [
+      { name: "Staff Management", href: "/staff", icon: UserCheck },
+      { name: "Roles & Permissions", href: "/roles", icon: UserCog },
+      { name: "Discipline", href: "/discipline", icon: AlertTriangle },
+      { name: "Onboarding", href: "/onboarding", icon: Briefcase },
+      { name: "Audit Logs", href: "/audit-logs", icon: Shield },
+      { name: "Branding Center", href: "/settings/branding", icon: Sparkles },
+      { name: "Settings", href: "/settings", icon: Cog },
+    ],
+  },
+  {
+    name: "Biometrics",
+    icon: Fingerprint,
+    items: [
+      { name: "Face ID Setup", href: "/biometrics/face-id", icon: UserCheck },
+      { name: "Fingerprint Setup", href: "/biometrics/fingerprint", icon: Fingerprint },
+    ],
+  },
+  {
+    name: "Help & Resources",
+    icon: BookOpen,
+    items: [
+      { name: "Documentation", href: "/docs", icon: BookOpen },
+      { name: "Notifications", href: "/notifications", icon: Bell },
+    ],
+  },
+];
+
+const mobileNavigation = [
+  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { name: "Students", href: "/students", icon: Users },
+  { name: "Attendance", href: "/attendance", icon: Calendar },
+  { name: "Payments", href: "/payments", icon: CreditCard },
+];
+
+const searchableRoutes = [
+  // Flatten navigationGroups into flat array for search
+  // Each item: { name, route, category, keywords }
+  // Example:
+  // { name: "AI Copilot Dashboard", route: "/ai-copilot", category: "AI Features", keywords: ["ai", "copilot", "predictions", "insights"] },
+  // ... (continue for all routes)
+];
+
+================================================================================
+PHASE 5: THEME SYSTEM (Dark Mode Support)
+================================================================================
+
+ThemeProvider Component (src/components/theme-provider.jsx):
+
+Purpose: Global theme toggle and persistence
+
+Implementation:
+1. Create React Context for theme state (light/dark)
+2. On mount: read localStorage for saved theme or detect system preference
+3. Add/remove .dark class on document.documentElement
+4. Export useTheme() hook for accessing toggle function
+5. Persist choice to localStorage
+
+Code structure:
+  - Create context: createContext
+  - Provider: wraps app, manages state
+  - useTheme(): returns { theme, toggleTheme }
+  - toggleTheme(): swaps light <-> dark, updates localStorage
+
+Integration:
+  - Wrap entire app with <ThemeProvider>{children}</ThemeProvider>
+  - Call toggleTheme() from theme toggle button in header
+  - All color tokens automatically swap when .dark class added/removed
+
+Accessibility:
+  - Respect prefers-color-scheme media query for initial detection
+  - Allow user override via toggle button
+  - Store preference for returning users
+
+================================================================================
+PHASE 6: RESPONSIVE DESIGN (Mobile / Tablet / Desktop)
+================================================================================
+
+BREAKPOINTS & BEHAVIOR:
+
+Mobile (<640px):
+  - Sidebar: HIDDEN (lg:hidden)
+  - Mobile drawer: accessible via menu button in header
+  - Search: HIDDEN (md:hidden), use full mobile header width
+  - Bottom navbar: FIXED, visible (lg:hidden)
+  - Header padding: px-4
+  - Content padding: p-4
+  - Cards: stack vertically, full width
+
+Tablet (640px - 1024px):
+  - Sidebar: HIDDEN (still below lg breakpoint)
+  - Mobile drawer: accessible
+  - Search: visible (md:flex)
+  - Bottom navbar: VISIBLE
+  - Header padding: px-4 to px-6 gradually
+  - Content padding: p-4 to p-6
+  - Cards: begin to organize in 2-column grids
+  - Images: scale up, full-width or 2-col layout
+
+Desktop (1024px+):
+  - Sidebar: VISIBLE (lg:fixed lg:inset-y-0 lg:flex)
+  - Mobile drawer: HIDDEN, replaced by sidebar
+  - Search: visible, integrated into header
+  - Bottom navbar: HIDDEN
+  - Header padding: px-8
+  - Content padding: p-8, left padding: pl-64 (for sidebar)
+  - Main content: main content area next to sidebar
+  - Cards: organize in 3-4 column grids
+  - Tables: full horizontal scroll if needed
+
+RESPONSIVE NAVIGATION STYLING:
+
+Mobile / Tablet (< lg):
+  Display: flex-col (stack)
+  Navigation items: full width
+  Icons visible, text visible
+  Drawer slides from left
+
+Desktop (lg+):
+  Display: flex-col (sidebar is vertical)
+  Navigation items: full sidebar width
+  Icons + text side-by-side
+  Active item: gradient left-to-right
+
+MEDIA QUERY HELPERS (Tailwind classes to use):
+  - sm: (mobile phones)
+  - md: (tablets, landscape phones)
+  - lg: (desktops, main breakpoint for sidebar)
+  - xl: (large desktops)
+
+TESTING CHECKLIST:
+  Test at: 320px, 375px, 640px, 768px, 1024px, 1280px, 1920px widths
+  Verify: navigation accessible at all sizes, no horizontal overflow, text readable
+
+================================================================================
+PHASE 7: ANIMATIONS & INTERACTIONS (Framer Motion)
+================================================================================
+
+All animations must respect prefers-reduced-motion for accessibility.
+
+SIDEBAR ANIMATIONS (Desktop):
+
+1. Group Expand/Collapse:
+   - motion.div with height: 0 → auto, opacity: 0 → 1
+   - Exit: height: auto → 0, opacity: 1 → 0
+   - Duration: 200ms
+   - Easing: default (spring)
+
+2. Navigation Item Hover:
+   - motion.div whileHover={{ scale: 1.02, x: 4 }}
+   - whileTap={{ scale: 0.98 }}
+   - Smooth 100ms transition
+
+3. Active Group Icon (ChevronRight):
+   - motion.div animate={{ rotate: expanded ? 90 : 0 }}
+   - Duration: 200ms
+
+MOBILE DRAWER ANIMATIONS:
+
+1. Drawer Slide-In:
+   - motion.aside
+   - Initial: {{ x: -300 }}
+   - Animate: {{ x: 0 }}
+   - Exit: {{ x: -300 }}
+   - Transition: type: "spring", damping: 30, stiffness: 200
+
+2. Overlay Fade:
+   - motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+   - Duration: 200ms
+
+SEARCH RESULTS:
+
+1. Results Dropdown:
+   - Initial: {{ opacity: 0, y: -10 }}
+   - Animate: {{ opacity: 1, y: 0 }}
+   - Exit: {{ opacity: 0, y: -10 }}
+   - Duration: 200ms
+
+2. Result Item Hover:
+   - motion.div whileHover={{ scale: 1.02, x: 5 }}
+
+CONTENT PAGE ENTRY:
+
+1. Page Content:
+   - motion.div
+   - Initial: {{ opacity: 0, y: 20 }}
+   - Animate: {{ opacity: 1, y: 0 }}
+   - Transition: duration: 300ms
+
+HEADER & MODALS:
+
+1. Sticky Header: no animation, always visible
+
+2. Floating Chatbot:
+   - Initial: {{ scale: 0, opacity: 0 }}
+   - Animate: {{ scale: 1, opacity: 1 }}
+   - Exit: {{ scale: 0, opacity: 0 }}
+
+ANIMATION BEST PRACTICES:
+
+- Keep transitions under 300ms for snappy feel
+- Use spring damping for natural motion feel (damping: 25-30)
+- Test on low-end devices (may need to disable animations)
+- Use AnimatePresence to manage exit animations
+- Wrap motion components in Framer Motion provider
+
+================================================================================
+PHASE 8: ACCESSIBILITY (A11Y) & WCAG AA
+================================================================================
+
+REQUIRED ACCESSIBILITY FEATURES:
+
+1. KEYBOARD NAVIGATION:
+   - All interactive elements: accessible via Tab key
+   - Sidebar groups: Enter/Space to toggle
+   - Search: ↑ ↓ to navigate, Enter to select, Esc to close
+   - Dropdowns: arrow keys, Enter, Esc
+   - All functionality available without mouse
+
+2. FOCUS MANAGEMENT:
+   - Focus visible ring: focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]
+   - Applied to: buttons, links, inputs, dropdowns, menu items
+   - Focus visible color: high contrast against background
+   - Never set outline: none without replacement focus indicator
+
+3. ARIA ATTRIBUTES:
+   - aria-current="page" on active nav item (for screen readers)
+   - aria-expanded="true/false" on collapsible groups
+   - aria-label on icon-only buttons (menu, close, etc.)
+   - aria-hidden="true" on decorative elements (icons in some contexts)
+   - role="navigation" on nav elements
+   - role="main" on main content area
+
+4. SEMANTIC HTML:
+   - Use <nav> for navigation sections
+   - Use <main> for main content
+   - Use <header>, <footer>, <section> appropriately
+   - Use <button> for interactive elements, not <div>
+   - Use <a> for links with href
+
+5. COLOR CONTRAST:
+   - All text vs background: minimum AA (4.5:1 for normal text, 3:1 for large text)
+   - Verify in both light and dark modes
+   - Don't rely on color alone to convey information
+
+6. SCREEN READER SUPPORT:
+   - Announcements when sidebar/drawer opens/closes (live region)
+   - Describe navigation structure clearly
+   - Provide alt text for images
+   - Use descriptive link text (not "click here")
+
+7. MOTION & ANIMATION:
+   - Respect prefers-reduced-motion: (prefers-reduced-motion: reduce)
+   - If user prefers reduced motion, disable animations
+   - Provide fallback (instant state change)
+
+8. FORM CONTROLS:
+   - All inputs labeled (use <label for="">)
+   - Error messages associated with inputs (aria-describedby)
+   - Required fields marked as required
+   - Focus styles visible on all controls
+
+9. LANGUAGE & CLARITY:
+   - Use clear, simple language
+   - Abbreviations explained on first use
+   - Instructions provided for complex interactions
+
+TESTING TOOLS:
+  - axe DevTools browser extension
+  - WAVE browser extension
+  - Keyboard-only navigation testing
+  - Screen reader testing (NVDA, JAWS, VoiceOver)
+  - Color contrast checker
+
+================================================================================
+PHASE 9: IMPLEMENTATION CHECKLIST
+================================================================================
+
+SETUP & DEPENDENCIES:
+  ☐ Ensure Next.js (App Router) installed
+  ☐ Install Tailwind CSS v4+
+  ☐ Install Framer Motion: npm install framer-motion
+  ☐ Install lucide-react: npm install lucide-react
+  ☐ Install Radix UI packages: npm install @radix-ui/react-*
+  ☐ Install class-variance-authority: npm install class-variance-authority clsx
+  ☐ Install class-merge utilities: npm install tailwind-merge
+
+TOKENS & STYLING:
+  ☐ Create src/app/globals.css with all CSS tokens (:root, .dark classes)
+  ☐ Configure Tailwind config to use custom token colors
+  ☐ Verify dark mode works: toggle .dark class on html element
+  ☐ Test gradient backgrounds on light/dark
+  ☐ Test border and text colors in both modes
+
+UI COMPONENTS:
+  ☐ Create src/components/ui/ directory
+  ☐ Add Button component (with cva variants)
+  ☐ Add Card component (with header, title, description, content, footer)
+  ☐ Add Input component
+  ☐ Add DropdownMenu component (with all sub-components)
+  ☐ Add Avatar component
+  ☐ Add Tabs component
+  ☐ Add Table component
+  ☐ Add Select, Checkbox, Switch, Slider (as needed)
+  ☐ Test each component in isolation
+
+LAYOUT SHELL:
+  ☐ Create src/components/dashboard-layout.jsx with:
+    ☐ Desktop sidebar (scrollable, collapsible groups, single-open logic)
+    ☐ Mobile drawer with overlay (slide-in animation)
+    ☐ Top sticky header with menu button, search, theme toggle, user menu
+    ☐ Main content area with flex layout
+    ☐ Mobile bottom navbar (4 quick-access items)
+    ☐ Floating chatbot placeholder
+  ☐ Wire up navigation groups array
+  ☐ Test sidebar expand/collapse logic
+  ☐ Test mobile drawer open/close with overlay
+
+SEARCH BAR:
+  ☐ Create src/components/enhanced-search-bar.jsx
+  ☐ Implement searchable routes array
+  ☐ Keyboard navigation: ↑ ↓ Enter Esc
+  ☐ Highlight matching text in results
+  ☐ Click or Enter to navigate to route
+  ☐ Test with 5+ searches
+
+THEME SYSTEM:
+  ☐ Create src/components/theme-provider.jsx
+  ☐ Implement context for theme state
+  ☐ Read localStorage for saved theme
+  ☐ Add/remove .dark class on document.documentElement
+  ☐ Export useTheme() hook
+  ☐ Wire theme toggle button to toggleTheme()
+  ☐ Test persistence: toggle, reload, verify theme persists
+
+ROUTING & PAGES:
+  ☐ Verify all routes in navigationGroups exist in src/app/
+  ☐ Create placeholder pages for missing routes
+  ☐ Implement route-to-component mappings
+  ☐ Test pathname detection (usePathname) for active highlighting
+  ☐ Test prefix matching for nested routes (/exams/dashboard, /exams/*)
+
+RESPONSIVE DESIGN:
+  ☐ Test at 320px width (mobile phone)
+  ☐ Test at 640px width (tablet)
+  ☐ Test at 1024px width (desktop)
+  ☐ Test at 1920px width (large screen)
+  ☐ Verify sidebar hidden on <lg
+  ☐ Verify sidebar visible on lg+
+  ☐ Verify bottom nav hidden on lg+
+  ☐ Verify no horizontal overflow at any width
+  ☐ Test landscape orientation on mobile
+
+ANIMATIONS & MOTION:
+  ☐ Test sidebar group expand/collapse animation (200ms)
+  ☐ Test mobile drawer slide-in/out (spring motion)
+  ☐ Test hover effects on nav items (scale + x translate)
+  ☐ Test search result dropdown animation (200ms)
+  ☐ Test page entry animation (300ms)
+  ☐ Test with prefers-reduced-motion enabled (animations disabled)
+
+ACCESSIBILITY:
+  ☐ Test keyboard navigation: Tab through all elements
+  ☐ Test sidebar toggle via keyboard (Enter/Space on group)
+  ☐ Test search keyboard: ↑ ↓ Enter Esc
+  ☐ Verify focus-visible ring on all inputs/buttons
+  ☐ Check aria-current on active nav items
+  ☐ Check aria-expanded on collapsible groups
+  ☐ Test with screen reader (NVDA, VoiceOver)
+  ☐ Verify color contrast in both light/dark (use axe DevTools)
+  ☐ Use semantic HTML: <nav>, <main>, <button>, <a>
+
+DARK MODE:
+  ☐ Toggle dark mode and verify all colors swap correctly
+  ☐ Test sidebar in light and dark modes
+  ☐ Test header in light and dark modes
+  ☐ Test cards/content in light and dark modes
+  ☐ Test text contrast in dark mode
+  ☐ Test gradients render correctly in dark mode
+
+CROSS-BROWSER:
+  ☐ Test in Chrome
+  ☐ Test in Firefox
+  ☐ Test in Safari
+  ☐ Test in Edge
+  ☐ Verify backdrop-blur works (CSS support)
+  ☐ Verify CSS custom properties work
+
+PERFORMANCE:
+  ☐ Measure Largest Contentful Paint (LCP)
+  ☐ Measure Interaction to Next Paint (INP)
+  ☐ Verify no layout shifts (CLS)
+  ☐ Profile animations for jank (60fps target)
+  ☐ Check bundle size impact of Framer Motion
+
+QA & FINAL TESTING:
+  ☐ Create checklist of all routes to visit and verify active highlighting
+  ☐ Test on real mobile device (not just browser resize)
+  ☐ Test on tablet device
+  ☐ Test with multiple browser zoom levels (75%, 100%, 125%, 150%)
+  ☐ Get stakeholder sign-off on visual design
+  ☐ Document any design differences from Version 3
+  ☐ Create runbook for developers: "How to use DashboardLayout"
+
+================================================================================
+PHASE 10: COMMON PATTERNS & CODE SNIPPETS
+================================================================================
+
+PATTERN 1: Active Route Detection
+
+// Hook pattern
+const isActive = (href) => pathname === href;
+
+// Single-level item
+<Link href="/dashboard">
+  <div className={isActive("/dashboard") ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white" : "..."}>
+    Dashboard
+  </div>
+</Link>
+
+// Multi-level with prefix match
+const isActive = (href) => {
+  if (href === "/dashboard") return pathname === href;
+  return pathname?.startsWith(href);
+};
+
+PATTERN 2: Collapsible Group
+
+const [expandedGroups, setExpandedGroups] = useState(["Overview"]);
+
+const toggleGroup = (groupName) => {
+  setExpandedGroups(prev => {
+    if (prev.includes(groupName)) {
+      return prev.filter(g => g !== groupName);
+    }
+    // Single-open: close all, open this one
+    return [groupName];
+  });
+};
+
+// In JSX
+<motion.div
+  animate={{ rotate: expandedGroups.includes(groupName) ? 90 : 0 }}
+  transition={{ duration: 0.2 }}
+>
+  <ChevronRight className="w-4 h-4" />
+</motion.div>
+
+PATTERN 3: Gradient Active Button
+
+<motion.div
+  className={`${
+    isActive(item.href)
+      ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
+      : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+  }`}
+  whileHover={{ scale: 1.02, x: 4 }}
+  whileTap={{ scale: 0.98 }}
+>
+  {item.name}
+</motion.div>
+
+PATTERN 4: Mobile Drawer with Overlay
+
+<AnimatePresence>
+  {sidebarOpen && (
+    <>
+      {/* Overlay */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={() => setSidebarOpen(false)}
+        className="fixed inset-0 bg-black/50 z-40"
+      />
+      {/* Drawer */}
+      <motion.aside
+        initial={{ x: -300 }}
+        animate={{ x: 0 }}
+        exit={{ x: -300 }}
+        transition={{ type: "spring", damping: 30 }}
+        className="fixed inset-y-0 left-0 w-64 bg-white dark:bg-gray-900 z-50"
+      >
+        {/* Content */}
+      </motion.aside>
+    </>
+  )}
+</AnimatePresence>
+
+PATTERN 5: Theme Toggle Hook
+
+const { theme, toggleTheme } = useTheme();
+
+<Button
+  variant="ghost"
+  size="icon"
+  onClick={toggleTheme}
+>
+  {theme === "light" ? <Moon /> : <Sun />}
+</Button>
+
+PATTERN 6: Focus Visible Ring (Accessible)
+
+className="focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] transition-all"
+
+// Applies to buttons, inputs, links
+// Ensures keyboard users see focus indicator
+
+PATTERN 7: Search with Keyboard Navigation
+
+const [selectedIndex, setSelectedIndex] = useState(0);
+
+const handleKeyDown = (e) => {
+  if (!showResults || searchResults.length === 0) return;
+  
+  switch (e.key) {
+    case "ArrowDown":
+      e.preventDefault();
+      setSelectedIndex((prev) => (prev + 1) % searchResults.length);
+      break;
+    case "ArrowUp":
+      e.preventDefault();
+      setSelectedIndex((prev) => (prev - 1 + searchResults.length) % searchResults.length);
+      break;
+    case "Enter":
+      e.preventDefault();
+      router.push(searchResults[selectedIndex].route);
+      break;
+    case "Escape":
+      setShowResults(false);
+      break;
+  }
+};
+
+PATTERN 8: Respect Reduced Motion
+
+<motion.div
+  initial={{ opacity: 0, y: 20 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ 
+    duration: 0.3,
+    ...(typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches && {
+      duration: 0 // instant
+    })
+  }}
+>
+  Content
+</motion.div>
+
+PATTERN 9: Responsive Tailwind Classes
+
+className="
+  hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64
+  // hidden on mobile, fixed sidebar on lg+
+  
+  lg:pl-64 flex flex-col
+  // add left padding on lg+ for sidebar, remove on mobile
+  
+  hidden md:flex
+  // hidden on small screens, flex on tablets+
+  
+  lg:hidden
+  // visible on mobile, hidden on desktop
+"
+
+PATTERN 10: Dropdown Menu with Radix UI
+
+<DropdownMenu>
+  <DropdownMenuTrigger asChild>
+    <Button variant="ghost">Menu</Button>
+  </DropdownMenuTrigger>
+  <DropdownMenuContent align="end">
+    <DropdownMenuLabel>My Account</DropdownMenuLabel>
+    <DropdownMenuSeparator />
+    <DropdownMenuItem>Profile</DropdownMenuItem>
+    <DropdownMenuItem>Settings</DropdownMenuItem>
+    <DropdownMenuSeparator />
+    <DropdownMenuItem className="text-red-600">Logout</DropdownMenuItem>
+  </DropdownMenuContent>
+</DropdownMenu>
+
+================================================================================
+PHASE 11: DEPLOYMENT & ROLLOUT STRATEGY
+================================================================================
+
+STAGING DEPLOYMENT:
+  1. Deploy to staging environment with V3 UI
+  2. Run full QA: navigation, responsiveness, animations, accessibility
+  3. Collect feedback from stakeholders
+  4. Document any visual tweaks needed
+  5. Fix issues iteratively
+
+PRODUCTION ROLLOUT:
+  1. Create feature flag for new UI (optional, allows gradual rollout)
+  2. Deploy to production
+  3. Monitor error rates and performance metrics
+  4. Gather user feedback
+  5. Plan follow-up improvements
+
+MONITORING:
+  - Track page load times
+  - Monitor navigation interaction times
+  - Watch for JavaScript errors
+  - Gather user feedback on new UI
+  - A/B test if needed (old vs new nav)
+
+DOCUMENTATION:
+  - Create developer guide: "How to use DashboardLayout"
+  - Document navigation structure changes
+  - Provide troubleshooting guide
+  - Create component storybook (optional Storybook.js setup)
+
+================================================================================
+PHASE 12: FUTURE ENHANCEMENTS & NEXT STEPS
+================================================================================
+
+OPTIONAL IMPROVEMENTS:
+  1. Add "Recent Routes" to search for quick access
+  2. Add favorites/starred routes for personalization
+  3. Implement breadcrumbs on each page
+  4. Add page transition animations
+  5. Create route-specific sub-navigation (e.g., Tahfiz section nav)
+  6. Add search analytics to find popular routes
+  7. Implement user preference saving (sidebar collapsed/expanded by default)
+  8. Add command palette (Cmd+K) for power users
+  9. Implement role-based route filtering (show/hide routes by user role)
+  10. Add animated page transitions with shared element transitions
+
+TESTING FRAMEWORK:
+  - Unit tests for components (Button, Card, Input, etc.)
+  - Integration tests for DashboardLayout and navigation
+  - E2E tests for critical flows (sidebar toggle, search, theme toggle)
+  - Visual regression tests for theme changes
+  - Accessibility tests (jest-axe, Cypress axe)
+
+PERFORMANCE OPTIMIZATION:
+  - Code split navigation groups by route
+  - Lazy load sections of navigation
+  - Optimize SVG icons (convert to inline where possible)
+  - Cache search results
+  - Memoize navigation components to prevent re-renders
+
+ADDITIONAL MODULES (if needed):
+  1. Tahfiz-specific sidebar and navbar (already defined in V3, can be adapted)
+  2. Teacher Portal custom navigation
+  3. Parent Portal custom navigation
+  4. Mobile app bottom tab navigation
+  5. Kiosk/touchscreen navigation (larger buttons, simplified flow)
+
+================================================================================
+END OF PROMPT
+================================================================================
+
+USAGE INSTRUCTIONS FOR AI AGENT IN VERSION 2:
+
+1. Read this entire document carefully
+2. Start with PHASE 0 for overview and context
+3. Follow PHASE 1-12 sequentially
+4. Use PHASE 10 code snippets as reference
+5. Refer back to PHASE 4 for complete navigation structure
+6. Use PHASE 9 checklist to track progress
+7. Test thoroughly against PHASE 6 (responsiveness) and PHASE 8 (accessibility)
+8. When implementing, create files in Version 2 matching the paths described
+9. Wire up all navigation routes from PHASE 4
+10. Deploy to staging first, then production
+
+EXPECTED OUTCOME:
+Version 2 will have the same visual design, navigation structure, and UX behavior as Version 3.
+Both projects will be visually and functionally consistent, ready for user deployment.

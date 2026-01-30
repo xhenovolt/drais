@@ -1,0 +1,46 @@
+                                        Table "public.schools"
+   Column   |            Type             | Collation | Nullable |               Default               
+------------+-----------------------------+-----------+----------+-------------------------------------
+ id         | bigint                      |           | not null | nextval('schools_id_seq'::regclass)
+ name       | character varying(255)      |           | not null | 
+ code       | character varying(50)       |           | not null | 
+ address    | text                        |           |          | 
+ phone      | character varying(50)       |           |          | NULL::character varying
+ email      | character varying(100)      |           |          | NULL::character varying
+ website    | character varying(100)      |           |          | NULL::character varying
+ status     | school_status               |           |          | 'active'::school_status
+ created_at | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+ updated_at | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+Indexes:
+    "schools_pkey" PRIMARY KEY, btree (id)
+    "idx_schools_code" btree (code)
+    "idx_schools_status" btree (status)
+    "schools_code_key" UNIQUE CONSTRAINT, btree (code)
+Referenced by:
+    TABLE "academic_years" CONSTRAINT "fk_academic_years_school" FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE
+    TABLE "audit_log" CONSTRAINT "fk_audit_log_school" FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE
+    TABLE "class_subjects" CONSTRAINT "fk_class_subjects_school" FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE
+    TABLE "classes" CONSTRAINT "fk_classes_school" FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE
+    TABLE "departments" CONSTRAINT "fk_departments_school" FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE
+    TABLE "enrollments" CONSTRAINT "fk_enrollments_school" FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE
+    TABLE "exams" CONSTRAINT "fk_exams_school" FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE
+    TABLE "fee_structures" CONSTRAINT "fk_fee_structures_school" FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE
+    TABLE "fingerprints" CONSTRAINT "fk_fingerprints_school" FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE
+    TABLE "notices" CONSTRAINT "fk_notices_school" FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE
+    TABLE "results" CONSTRAINT "fk_results_school" FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE
+    TABLE "roles" CONSTRAINT "fk_roles_school" FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE
+    TABLE "sections" CONSTRAINT "fk_sections_school" FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE
+    TABLE "settings" CONSTRAINT "fk_settings_school" FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE
+    TABLE "staff_attendance" CONSTRAINT "fk_staff_attendance_school" FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE
+    TABLE "staff" CONSTRAINT "fk_staff_school" FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE
+    TABLE "streams" CONSTRAINT "fk_streams_school" FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE
+    TABLE "student_attendance" CONSTRAINT "fk_student_attendance_school" FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE
+    TABLE "students" CONSTRAINT "fk_students_school" FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE
+    TABLE "subjects" CONSTRAINT "fk_subjects_school" FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE
+    TABLE "terms" CONSTRAINT "fk_terms_school" FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE
+    TABLE "timetable" CONSTRAINT "fk_timetable_school" FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE
+    TABLE "users" CONSTRAINT "fk_users_school" FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE
+    TABLE "wallets" CONSTRAINT "fk_wallets_school" FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE
+Triggers:
+    trigger_schools_updated_at BEFORE UPDATE ON schools FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()
+

@@ -1,0 +1,17 @@
+id|bigint
+plan_name|character varying
+plan_code|character varying
+description|text
+price_monthly|numeric
+price_yearly|numeric
+currency|character varying
+trial_period_days|integer
+max_students|integer
+max_staff|integer
+max_schools|integer
+features|jsonb
+is_active|boolean
+is_trial|boolean
+sort_order|integer
+created_at|timestamp without time zone
+updated_at|timestamp without time zone

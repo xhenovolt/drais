@@ -1,0 +1,20 @@
+    tablename     |         indexname          
+------------------+----------------------------
+ onboarding_steps | idx_onboarding_status
+ onboarding_steps | idx_onboarding_step_order
+ onboarding_steps | idx_onboarding_user
+ onboarding_steps | idx_onboarding_user_status
+ onboarding_steps | onboarding_steps_pkey
+ onboarding_steps | unique_user_step
+ user_people      | idx_user_people_person
+ user_people      | user_people_pkey
+ user_profiles    | idx_user_profiles_school
+ user_profiles    | idx_user_profiles_user
+ user_profiles    | user_profiles_pkey
+ user_profiles    | user_profiles_user_id_key
+ user_sessions    | idx_user_sessions_activity
+ user_sessions    | idx_user_sessions_ip
+ user_sessions    | idx_user_sessions_user
+ user_sessions    | user_sessions_pkey
+(16 rows)
+

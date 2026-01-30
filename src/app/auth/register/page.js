@@ -49,7 +49,7 @@ export default function RegisterPage() {
 
       if (result.success) {
         toast.success('Registration successful!');
-        router.push('/dashboard');
+        router.push('/onboarding/step1');
       } else {
         toast.error(result.error || 'Registration failed');
       }

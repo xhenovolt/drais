@@ -1,76 +1,86 @@
 /**
- * User Login Endpoint
+ * Login Endpoint (Jeton Compatible)
  * POST /api/auth/login
  * 
- * DRAIS v0.0.0042 - Enhanced with Access/Refresh tokens
+ * Authenticates user and creates session
+ * Sets jeton_session HTTP-only cookie
+ * Returns ONLY message, no user data
  */
 
 import { NextResponse } from 'next/server';
-import { verifyUserCredentials, updateLastLogin, storeRefreshToken } from '@/lib/services/user.service';
-import { generateTokens, setAuthCookies, createSessionData } from '@/lib/auth/jwt-enhanced';
+import { verifyCredentials } from '@/lib/auth.js';
+import { createSession, getSecureCookieOptions } from '@/lib/session.js';
+import { updateLastLogin } from '@/lib/auth.js';
 
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { email, username, password } = body;
+    const { email, password } = body;
 
-    // Validation
-    if ((!email && !username) || !password) {
+    // Input validation
+    if (!email || !password) {
       return NextResponse.json(
-        { success: false, error: 'Email/username and password are required' },
+        { error: 'Email and password are required' },
         { status: 400 }
       );
     }
 
-    // Verify credentials
-    const user = await verifyUserCredentials(email || username, password);
-
-    // Remove password from user object
-    delete user.password;
-
-    // Update last login
-    await updateLastLogin(user.id);
-
-    // Generate tokens
-    const tokens = generateTokens(user);
-
-    // Store refresh token (with 7 day expiry)
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7);
-    await storeRefreshToken(user.id, tokens.refreshToken, expiresAt);
-
-    // Create session data
-    const sessionData = createSessionData(user, tokens);
-
-    // Create response with cookies
-    let response = NextResponse.json(
-      {
-        success: true,
-        message: 'Login successful',
-        data: sessionData,
-      },
-      { status: 200 }
-    );
-
-    // Set HttpOnly cookies
-    response = setAuthCookies(response, tokens);
-
-    return response;
-
-  } catch (error) {
-    console.error('Login error:', error);
-
-    // Handle specific errors
-    if (error.message === 'Invalid credentials') {
+    if (typeof email !== 'string' || typeof password !== 'string') {
       return NextResponse.json(
-        { success: false, error: 'Invalid email/username or password' },
+        { error: 'Email and password must be strings' },
+        { status: 400 }
+      );
+    }
+
+    // Verify credentials (finds user and compares password)
+    const user = await verifyCredentials(email, password);
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Invalid email or password' },
         { status: 401 }
       );
     }
 
+    // Create session in database
+    const sessionId = await createSession(user.id);
+
+    // Update last login (non-blocking)
+    updateLastLogin(user.id).catch(err => 
+      console.error('[Login] Update last login error:', err)
+    );
+
+    // Create response with user data (frontend needs this)
+    const response = NextResponse.json(
+      {
+        success: true,
+        message: 'Logged in successfully',
+        data: {
+          user: {
+            id: user.id,
+            email: user.email,
+            role: user.role,
+            status: user.status,
+          },
+        },
+        redirectTo: '/dashboard',
+      },
+      { status: 200 }
+    );
+
+    // Set jeton_session HTTP-only cookie
+    response.cookies.set(
+      'jeton_session',
+      sessionId,
+      getSecureCookieOptions()
+    );
+
+    return response;
+  } catch (error) {
+    console.error('[Login] Error:', error);
     return NextResponse.json(
-      { success: false, error: 'Login failed. Please try again.' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
 }
+

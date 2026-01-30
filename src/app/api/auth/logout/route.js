@@ -1,60 +1,54 @@
 /**
- * Logout Endpoint
+ * Logout Endpoint (Jeton Compatible)
  * POST /api/auth/logout
  * 
- * DRAIS v0.0.0042
+ * Deletes session from database and clears jeton_session cookie
  */
 
 import { NextResponse } from 'next/server';
-import { invalidateRefreshToken } from '@/lib/services/user.service';
-import { clearAuthCookies } from '@/lib/auth/jwt-enhanced';
+import { cookies } from 'next/headers';
+import { deleteSession } from '@/lib/session.js';
+import { getSecureCookieOptions } from '@/lib/session.js';
 
 export async function POST(request) {
   try {
-    // Extract refresh token from cookies
-    const cookieHeader = request.headers.get('cookie');
-    if (cookieHeader) {
-      const cookies = Object.fromEntries(
-        cookieHeader.split('; ').map(c => {
-          const [key, ...v] = c.split('=');
-          return [key, v.join('=')];
-        })
-      );
+    const cookieStore = cookies();
+    const sessionId = cookieStore.get('jeton_session')?.value;
 
-      const refreshToken = cookies.refreshToken;
-      if (refreshToken) {
-        // Invalidate refresh token in database
-        await invalidateRefreshToken(refreshToken);
-      }
+    // Delete session from database if it exists
+    if (sessionId) {
+      await deleteSession(sessionId);
     }
 
     // Create response
-    let response = NextResponse.json(
-      {
-        success: true,
-        message: 'Logged out successfully',
-      },
+    const response = NextResponse.json(
+      { message: 'Logged out successfully' },
       { status: 200 }
     );
 
-    // Clear cookies
-    response = clearAuthCookies(response);
+    // Clear jeton_session cookie
+    response.cookies.set(
+      'jeton_session',
+      '',
+      { ...getSecureCookieOptions(), maxAge: 0 }
+    );
 
     return response;
-
   } catch (error) {
-    console.error('Logout error:', error);
-    
-    // Still clear cookies even if database operation fails
-    let response = NextResponse.json(
-      {
-        success: true,
-        message: 'Logged out successfully',
-      },
+    console.error('[Logout] Error:', error);
+
+    // Even if there's an error, clear the cookie
+    const response = NextResponse.json(
+      { message: 'Logged out successfully' },
       { status: 200 }
     );
 
-    response = clearAuthCookies(response);
+    response.cookies.set(
+      'jeton_session',
+      '',
+      { ...getSecureCookieOptions(), maxAge: 0 }
+    );
+
     return response;
   }
 }

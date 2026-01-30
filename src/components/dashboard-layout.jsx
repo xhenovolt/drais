@@ -13,6 +13,7 @@ import AIRecommendationModals from "@/components/ai-recommendation-modals";
 import WhatsNewModal from "@/components/whats-new-modal";
 import EnhancedSearchBar from "@/components/enhanced-search-bar";
 import CookieConsentBanner from "@/components/cookie-consent-banner";
+import SchoolIdentityDisplay from "@/components/school-identity";
 import {
   LayoutDashboard,
   Users,
@@ -375,14 +376,22 @@ export default function DashboardLayout({ children }) {
       {/* Desktop Sidebar */}
       <aside className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
         <div className="flex flex-col flex-grow bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg border-r border-gray-200 dark:border-gray-800 overflow-y-auto">
-          {/* Logo */}
-          <div className="flex items-center gap-3 h-16 px-6 border-b border-gray-200 dark:border-gray-800">
-            <DraisLogo className="w-8 h-8" />
-            <div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                DRAIS
-              </h1>
-              <p className="text-xs text-gray-500 dark:text-gray-400">v0.0.0018</p>
+          {/* Logo & School Identity */}
+          <div className="flex flex-col gap-3 p-4 border-b border-gray-200 dark:border-gray-800">
+            {/* DRAIS Logo */}
+            <div className="flex items-center gap-3">
+              <DraisLogo className="w-8 h-8" />
+              <div>
+                <h1 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  DRAIS
+                </h1>
+                <p className="text-xs text-gray-500 dark:text-gray-400">v0.0.0018</p>
+              </div>
+            </div>
+
+            {/* School Identity */}
+            <div className="border-t border-gray-200 dark:border-gray-700 pt-3">
+              <SchoolIdentityDisplay />
             </div>
           </div>
 
@@ -576,16 +585,21 @@ export default function DashboardLayout({ children }) {
       <div className="lg:pl-64 flex flex-col min-h-screen">
         {/* Top Header */}
         <header className="sticky top-0 z-30 bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg border-b border-gray-200 dark:border-gray-800">
-          <div className="flex items-center justify-between h-16 px-4 lg:px-8">
+          <div className="flex items-center justify-between h-16 px-4 lg:px-8 gap-4">
             {/* Mobile Menu Button */}
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setSidebarOpen(true)}
-              className="lg:hidden"
+              className="lg:hidden flex-shrink-0"
             >
               <Menu className="w-5 h-5" />
             </Button>
+
+            {/* School Identity Display - Desktop */}
+            <div className="hidden lg:block flex-shrink-0">
+              <SchoolIdentityDisplay />
+            </div>
 
             {/* Enhanced Search Bar */}
             <div className="hidden md:flex items-center flex-1 max-w-md">
@@ -593,7 +607,7 @@ export default function DashboardLayout({ children }) {
             </div>
 
             {/* Right Side Actions */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-shrink-0">
               <Button
                 variant="ghost"
                 size="icon"
@@ -643,6 +657,11 @@ export default function DashboardLayout({ children }) {
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
+          </div>
+
+          {/* School Identity Display - Mobile (below header for visibility) */}
+          <div className="lg:hidden px-4 pb-3 pt-2 border-t border-gray-200 dark:border-gray-800 bg-gradient-to-r from-blue-50/50 to-indigo-50/50 dark:from-blue-950/10 dark:to-indigo-950/10">
+            <SchoolIdentityDisplay />
           </div>
         </header>
 

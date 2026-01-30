@@ -15,18 +15,20 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-// Comprehensive SEO metadata
-export const metadata = {
-  ...defaultSEO,
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 5,
-  },
+// Viewport configuration (Next.js 14+)
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#2563eb' },
     { media: '(prefers-color-scheme: dark)', color: '#1e40af' },
   ],
+};
+
+// Comprehensive SEO metadata
+export const metadata = {
+  ...defaultSEO,
 };
 
 export default function RootLayout({ children }) {

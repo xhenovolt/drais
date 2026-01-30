@@ -1,6 +1,17 @@
+/**
+ * Students Management Page
+ * DRAIS v0.0.0046
+ * 
+ * Lists all students with search, filter, and admission functionality
+ * Uses real API data - shows "No students found" if database is empty
+ */
+
 "use client";
 
 import DashboardLayout from "@/components/dashboard-layout";
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import StudentAdmissionWizard from '@/components/student-admission-wizard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,13 +31,14 @@ import {
   Search,
   Filter,
   Download,
-  Upload,
   MoreVertical,
   Eye,
   Edit,
   Trash2,
   Users,
   UserPlus,
+  AlertCircle,
+  Loader,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -34,69 +46,132 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import Link from "next/link";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
-const students = [
-  {
-    id: "ST001",
-    name: "Alice Johnson",
-    email: "alice.johnson@email.com",
-    class: "Grade 10-A",
-    rollNo: "101",
-    status: "Active",
-    admissionDate: "2024-01-15",
-    avatar: "AJ",
-  },
-  {
-    id: "ST002",
-    name: "Bob Smith",
-    email: "bob.smith@email.com",
-    class: "Grade 10-B",
-    rollNo: "102",
-    status: "Active",
-    admissionDate: "2024-01-16",
-    avatar: "BS",
-  },
-  {
-    id: "ST003",
-    name: "Carol Davis",
-    email: "carol.davis@email.com",
-    class: "Grade 9-A",
-    rollNo: "201",
-    status: "Inactive",
-    admissionDate: "2024-01-10",
-    avatar: "CD",
-  },
-  {
-    id: "ST004",
-    name: "David Wilson",
-    email: "david.wilson@email.com",
-    class: "Grade 11-A",
-    rollNo: "301",
-    status: "Active",
-    admissionDate: "2024-01-20",
-    avatar: "DW",
-  },
-  {
-    id: "ST005",
-    name: "Eva Brown",
-    email: "eva.brown@email.com",
-    class: "Grade 10-A",
-    rollNo: "103",
-    status: "Active",
-    admissionDate: "2024-01-12",
-    avatar: "EB",
-  },
-];
+export default function StudentsPage() {
+  const router = useRouter();
+  const [showAdmissionWizard, setShowAdmissionWizard] = useState(false);
+  const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalStudents, setTotalStudents] = useState(0);
+  const [activeCount, setActiveCount] = useState(0);
 
-const stats = [
-  { name: "Total Students", value: "2,847", icon: Users, color: "from-blue-500 to-blue-600" },
-  { name: "New This Month", value: "156", icon: UserPlus, color: "from-green-500 to-green-600" },
-  { name: "Active Students", value: "2,723", icon: Users, color: "from-purple-500 to-purple-600" },
-  { name: "Inactive Students", value: "124", icon: Users, color: "from-orange-500 to-orange-600" },
-];
+  // Fetch students from API
+  useEffect(() => {
+    fetchStudents();
+  }, [page, searchQuery]);
 
-export default function Students() {
+  const fetchStudents = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: '20',
+      });
+      
+      if (searchQuery) {
+        params.append('search', searchQuery);
+      }
+
+      const response = await fetch(`/api/students?${params}`, {
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Unauthorized. Please log in again.');
+        }
+        throw new Error(`Failed to fetch students: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to fetch students');
+      }
+
+      setStudents(data.data || []);
+      setTotalStudents(data.pagination?.totalItems || 0);
+      setTotalPages(data.pagination?.totalPages || 1);
+      setActiveCount(data.data?.filter(s => s.status === 'active').length || 0);
+    } catch (err) {
+      console.error('Error fetching students:', err);
+      setError(err.message);
+      setStudents([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAdmissionSuccess = () => {
+    setShowAdmissionWizard(false);
+    setPage(1);
+    fetchStudents();
+  };
+
+  const handleSearch = (value) => {
+    setSearchQuery(value);
+    setPage(1);
+  };
+
+  const formatStudentInitials = (firstName, lastName) => {
+    return `${firstName?.[0] || ''}${lastName?.[0] || ''}`.toUpperCase();
+  };
+
+  const formatDate = (date) => {
+    if (!date) return '-';
+    return new Date(date).toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric' 
+    });
+  };
+
+  const stats = [
+    { 
+      name: "Total Students", 
+      value: totalStudents, 
+      icon: Users, 
+      color: "from-blue-500 to-blue-600" 
+    },
+    { 
+      name: "Active Students", 
+      value: activeCount, 
+      icon: Users, 
+      color: "from-green-500 to-green-600" 
+    },
+    { 
+      name: "New Admission", 
+      value: "Quick Add", 
+      icon: UserPlus, 
+      color: "from-purple-500 to-purple-600",
+      action: true
+    },
+    { 
+      name: "Management", 
+      value: students.length > 0 ? `${students.length} shown` : "Empty", 
+      icon: Filter, 
+      color: "from-orange-500 to-orange-600" 
+    },
+  ];
+
+  if (showAdmissionWizard) {
+    return (
+      <DashboardLayout>
+        <StudentAdmissionWizard 
+          onSuccess={handleAdmissionSuccess}
+          onCancel={() => setShowAdmissionWizard(false)}
+        />
+      </DashboardLayout>
+    );
+  }
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -111,24 +186,23 @@ export default function Students() {
               Students Management
             </h1>
             <p className="text-gray-600 dark:text-gray-400 mt-1">
-              Manage student records, admissions, and academic information
+              {totalStudents === 0 
+                ? "No students yet. Add your first student to get started." 
+                : `Manage ${totalStudents} student${totalStudents !== 1 ? 's' : ''} and admissions`}
             </p>
           </div>
           <div className="flex items-center gap-3 mt-4 md:mt-0">
             <Button variant="outline" className="gap-2">
-              <Upload className="w-4 h-4" />
-              Import
-            </Button>
-            <Button variant="outline" className="gap-2">
               <Download className="w-4 h-4" />
               Export
             </Button>
-            <Link href="/students/add">
-              <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 gap-2">
-                <Plus className="w-4 h-4" />
-                Add Student
-              </Button>
-            </Link>
+            <Button 
+              onClick={() => setShowAdmissionWizard(true)}
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              Add Student
+            </Button>
           </div>
         </motion.div>
 
@@ -140,7 +214,11 @@ export default function Students() {
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
         >
           {stats.map((stat, index) => (
-            <Card key={index} className="hover:shadow-lg transition-all duration-300">
+            <Card 
+              key={index} 
+              className="hover:shadow-lg transition-all duration-300 cursor-pointer"
+              onClick={stat.action ? () => setShowAdmissionWizard(true) : undefined}
+            >
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -171,23 +249,31 @@ export default function Students() {
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <Input
-                      placeholder="Search students by name, ID, class..."
+                      placeholder="Search students by name, ID..."
                       className="pl-10 bg-white dark:bg-gray-900"
+                      value={searchQuery}
+                      onChange={(e) => handleSearch(e.target.value)}
                     />
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button variant="outline" className="gap-2">
+                  <Button variant="outline" className="gap-2" disabled>
                     <Filter className="w-4 h-4" />
                     Filters
                   </Button>
-                  <Button variant="outline">Class</Button>
-                  <Button variant="outline">Status</Button>
                 </div>
               </div>
             </CardContent>
           </Card>
         </motion.div>
+
+        {/* Error Alert */}
+        {error && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
 
         {/* Students Table */}
         <motion.div
@@ -197,119 +283,168 @@ export default function Students() {
         >
           <Card>
             <CardHeader>
-              <CardTitle>All Students</CardTitle>
+              <CardTitle>
+                {loading ? 'Loading...' : totalStudents === 0 ? 'No Students Found' : 'All Students'}
+              </CardTitle>
               <CardDescription>
-                A list of all students in your institution
+                {totalStudents === 0 
+                  ? "Start by adding a new student using the form above." 
+                  : `Showing ${students.length} of ${totalStudents} students`}
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="rounded-lg border overflow-hidden">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-gray-50 dark:bg-gray-800">
-                      <TableHead>Student</TableHead>
-                      <TableHead>Student ID</TableHead>
-                      <TableHead>Class</TableHead>
-                      <TableHead>Roll No</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Admission Date</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {students.map((student, index) => (
-                      <motion.tr
-                        key={student.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.4 + index * 0.05 }}
-                        className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                      >
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <Avatar className="w-10 h-10">
-                              <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold">
-                                {student.avatar}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <p className="font-medium">{student.name}</p>
-                              <p className="text-sm text-gray-600 dark:text-gray-400">
-                                {student.email}
-                              </p>
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="font-mono">{student.id}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{student.class}</Badge>
-                        </TableCell>
-                        <TableCell>{student.rollNo}</TableCell>
-                        <TableCell>
-                          <Badge
-                            variant={student.status === "Active" ? "default" : "secondary"}
-                            className={
-                              student.status === "Active"
-                                ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                                : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200"
-                            }
-                          >
-                            {student.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{student.admissionDate}</TableCell>
-                        <TableCell className="text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <MoreVertical className="w-4 h-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem className="gap-2">
-                                <Eye className="w-4 h-4" />
-                                View Details
-                              </DropdownMenuItem>
-                              <DropdownMenuItem className="gap-2">
-                                <Edit className="w-4 h-4" />
-                                Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuItem className="gap-2 text-red-600">
-                                <Trash2 className="w-4 h-4" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </motion.tr>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-
-              {/* Pagination */}
-              <div className="flex items-center justify-between mt-6">
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Showing 1 to 5 of 2,847 students
-                </p>
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" disabled>
-                    Previous
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    1
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    2
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    3
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    Next
+              {loading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-center">
+                    <Loader className="w-8 h-8 animate-spin mx-auto mb-3 text-blue-600" />
+                    <p className="text-gray-600 dark:text-gray-400">Loading students...</p>
+                  </div>
+                </div>
+              ) : students.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <Users className="w-16 h-16 text-gray-300 dark:text-gray-600 mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    No Students Found
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400 mb-6">
+                    {searchQuery 
+                      ? "No students match your search. Try a different search term." 
+                      : "No students have been added yet. Create your first student record."}
+                  </p>
+                  <Button 
+                    onClick={() => setShowAdmissionWizard(true)}
+                    className="gap-2"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add First Student
                   </Button>
                 </div>
-              </div>
+              ) : (
+                <div className="rounded-lg border overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-gray-50 dark:bg-gray-800">
+                        <TableHead>Student</TableHead>
+                        <TableHead>Admission No</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Admission Date</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {students.map((student, index) => (
+                        <motion.tr
+                          key={student.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.4 + index * 0.05 }}
+                          className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                        >
+                          <TableCell>
+                            <div className="flex items-center gap-3">
+                              <Avatar className="w-10 h-10">
+                                <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold">
+                                  {formatStudentInitials(
+                                    student.person?.first_name,
+                                    student.person?.last_name
+                                  )}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <p className="font-medium">
+                                  {student.person?.first_name} {student.person?.last_name}
+                                </p>
+                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                  ID: {student.id}
+                                </p>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell className="font-mono">
+                            {student.admission_no || '-'}
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant={student.status === "active" ? "default" : "secondary"}
+                              className={
+                                student.status === "active"
+                                  ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                                  : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200"
+                              }
+                            >
+                              {student.status?.charAt(0).toUpperCase() + student.status?.slice(1) || 'Active'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {formatDate(student.admission_date)}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                  <MoreVertical className="w-4 h-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem className="gap-2">
+                                  <Eye className="w-4 h-4" />
+                                  View Details
+                                </DropdownMenuItem>
+                                <DropdownMenuItem className="gap-2">
+                                  <Edit className="w-4 h-4" />
+                                  Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem className="gap-2 text-red-600">
+                                  <Trash2 className="w-4 h-4" />
+                                  Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </motion.tr>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+
+              {/* Pagination */}
+              {!loading && students.length > 0 && (
+                <div className="flex items-center justify-between mt-6">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Showing {students.length} of {totalStudents} students
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      disabled={page === 1}
+                      onClick={() => setPage(p => Math.max(1, p - 1))}
+                    >
+                      Previous
+                    </Button>
+                    {Array.from({ length: Math.min(3, totalPages) }, (_, i) => (
+                      <Button
+                        key={i + 1}
+                        variant={page === i + 1 ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setPage(i + 1)}
+                      >
+                        {i + 1}
+                      </Button>
+                    ))}
+                    {totalPages > 3 && <span className="text-gray-600">...</span>}
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      disabled={page === totalPages}
+                      onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </motion.div>

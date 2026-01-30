@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 import DashboardLayout from "@/components/dashboard-layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -118,11 +120,37 @@ const AnimatedCounter = ({ value, suffix = "" }) => {
 };
 
 export default function Dashboard() {
+  const router = useRouter();
+  const { user, loading } = useAuth();
   const [selectedTerm, setSelectedTerm] = useState("term1");
   const [selectedClass, setSelectedClass] = useState("all");
   const [selectedSubject, setSelectedSubject] = useState("all");
   const [selectedTeacher, setSelectedTeacher] = useState("all");
   const [filtersExpanded, setFiltersExpanded] = useState(false);
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/auth/login');
+    }
+  }, [user, loading, router]);
+
+  // Show loading while checking auth
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render if not authenticated
+  if (!user) {
+    return null;
+  }
 
   const stats = [
     {
@@ -173,6 +201,73 @@ export default function Dashboard() {
   return (
     <DashboardLayout>
       <div className="space-y-8">
+        {/* School Setup Reminder Banner */}
+        {!user.isOnboardingComplete ? (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 dark:from-yellow-900/40 dark:via-orange-900/40 dark:to-red-900/40 border-2 border-yellow-500 dark:border-yellow-700 rounded-xl p-6 shadow-lg"
+          >
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div className="flex-1">
+                <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-1">
+                  ⚠️ Complete Your School Setup
+                </h3>
+                <p className="text-sm text-gray-800 dark:text-gray-200">
+                  Some features are locked until you provide your school information. This takes just 5 minutes!
+                </p>
+              </div>
+              <Link href="/school-setup" className="flex-shrink-0">
+                <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold whitespace-nowrap">
+                  Complete Setup Now
+                </Button>
+              </Link>
+            </div>
+          </motion.div>
+        ) : null}
+
+        {/* School Identity Welcome Banner - Shows when setup is complete */}
+        {user.isOnboardingComplete && user.school_name ? (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 dark:from-blue-900/50 dark:via-indigo-900/50 dark:to-purple-900/50 border border-blue-400 dark:border-blue-700/50 rounded-xl p-6 shadow-lg overflow-hidden relative"
+          >
+            {/* Subtle background pattern */}
+            <div className="absolute inset-0 opacity-5 dark:opacity-10">
+              <div className="absolute inset-0 bg-grid-pattern" />
+            </div>
+
+            <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div className="flex items-start gap-4">
+                {/* School Badge */}
+                <div className="flex-shrink-0">
+                  <div className="w-14 h-14 rounded-lg bg-white dark:bg-gray-800 shadow-lg flex items-center justify-center">
+                    <span className="text-lg font-bold bg-gradient-to-br from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                      {user.school_name
+                        .split(" ")
+                        .map((word) => word[0])
+                        .join("")
+                        .toUpperCase()
+                        .slice(0, 2)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Welcome Message */}
+                <div className="flex-1">
+                  <h2 className="text-xl md:text-2xl font-bold text-white mb-1">
+                    Welcome to {user.school_name}
+                  </h2>
+                  <p className="text-blue-100 dark:text-blue-200 text-sm">
+                    Your school system is fully set up and ready to use. All features are now unlocked.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        ) : null}
+
         {/* Page Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}

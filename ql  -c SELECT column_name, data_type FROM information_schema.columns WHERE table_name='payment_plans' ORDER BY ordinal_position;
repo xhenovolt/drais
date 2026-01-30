@@ -1,0 +1,30 @@
+                                            Table "public.payment_plans"
+      Column       |            Type             | Collation | Nullable |                  Default                  
+-------------------+-----------------------------+-----------+----------+-------------------------------------------
+ id                | bigint                      |           | not null | nextval('payment_plans_id_seq'::regclass)
+ plan_name         | character varying(100)      |           | not null | 
+ plan_code         | character varying(50)       |           | not null | 
+ description       | text                        |           |          | 
+ price_monthly     | numeric(10,2)               |           | not null | 0.00
+ price_yearly      | numeric(10,2)               |           | not null | 0.00
+ currency          | character varying(10)       |           |          | 'UGX'::character varying
+ trial_period_days | integer                     |           |          | 0
+ max_students      | integer                     |           |          | 
+ max_staff         | integer                     |           |          | 
+ max_schools       | integer                     |           |          | 1
+ features          | jsonb                       |           |          | 
+ is_active         | boolean                     |           |          | true
+ is_trial          | boolean                     |           |          | false
+ sort_order        | integer                     |           |          | 0
+ created_at        | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+ updated_at        | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+Indexes:
+    "payment_plans_pkey" PRIMARY KEY, btree (id)
+    "idx_payment_plans_active" btree (is_active)
+    "idx_payment_plans_code" btree (plan_code)
+    "idx_payment_plans_trial" btree (is_trial)
+    "payment_plans_plan_code_key" UNIQUE CONSTRAINT, btree (plan_code)
+    "payment_plans_plan_name_key" UNIQUE CONSTRAINT, btree (plan_name)
+Referenced by:
+    TABLE "user_payment_plans" CONSTRAINT "user_payment_plans_plan_id_fkey" FOREIGN KEY (plan_id) REFERENCES payment_plans(id) ON DELETE RESTRICT
+

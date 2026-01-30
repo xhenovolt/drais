@@ -1,16 +1,21 @@
 /**
- * Next.js Middleware for Route Protection
- * DRAIS v0.0.0042
+ * Next.js Middleware for Route Protection (Jeton Compatible)
+ * DRAIS v0.0.0299 - Session-based authentication
  * 
- * Protects pages based on authentication status and user roles
+ * IMPORTANT: Middleware only checks for jeton_session cookie existence.
+ * Full validation happens in API routes and server components.
+ * NO DATABASE QUERIES IN MIDDLEWARE.
  */
 
 import { NextResponse } from 'next/server';
+
+const SESSION_COOKIE_NAME = 'jeton_session';
 
 // Public routes that don't require authentication
 const publicRoutes = [
   '/',
   '/about-xhenvolt',
+  '/about',
   '/features',
   '/pricing',
   '/contact',
@@ -20,6 +25,18 @@ const publicRoutes = [
   '/privacy-policy',
   '/demo',
   '/get-started',
+  '/403',
+  '/404',
+  '/500',
+  '/503',
+  '/error',
+  '/not-found',
+];
+
+// Routes accessible to authenticated users (locked or not)
+const authenticatedRoutes = [
+  '/restricted',
+  '/school-setup',
 ];
 
 // Auth routes (redirect if already logged in)
@@ -29,24 +46,32 @@ const authRoutes = [
   '/auth/forgot-password',
 ];
 
-// Role-based route protection
-const roleProtectedRoutes = {
-  admin: [
-    '/settings',
-    '/roles',
-    '/audit-logs',
-    '/security',
-    '/operations/dashboard',
-  ],
-  teacher: [
-    '/teacher',
-    '/ai-teacher',
-  ],
-  staff: [
-    '/staff',
-    '/attendance',
-  ],
-};
+// Protected routes that require jeton_session cookie
+const protectedRoutes = [
+  '/dashboard',
+  '/app',
+  '/students',
+  '/teachers',
+  '/staff',
+  '/classes',
+  '/subjects',
+  '/attendance',
+  '/fees',
+  '/reports',
+  '/analytics',
+  '/messaging',
+  '/library',
+  '/kitchen',
+  '/timetable',
+  '/settings',
+  '/roles',
+  '/audit-logs',
+  '/security',
+  '/operations',
+  '/teacher',
+  '/ai-teacher',
+  '/onboarding',
+];
 
 /**
  * Check if route matches pattern
@@ -61,48 +86,28 @@ function matchesRoute(pathname, routes) {
 }
 
 /**
- * Verify JWT token from cookies
+ * Check if jeton_session cookie exists
+ * This is the ONLY check middleware performs - no database validation
  */
-function verifyToken(token) {
-  if (!token) return null;
-
-  try {
-    // Simple base64 decode to get payload (for role checking)
-    // In production, you'd verify signature on server
-    const parts = token.split('.');
-    if (parts.length !== 3) return null;
-
-    const payload = JSON.parse(
-      Buffer.from(parts[1], 'base64url').toString('utf-8')
-    );
-
-    // Check if expired
-    if (payload.exp && payload.exp * 1000 < Date.now()) {
-      return null;
-    }
-
-    return payload;
-  } catch {
-    return null;
-  }
+function hasSessionCookie(request) {
+  const sessionId = request.cookies.get(SESSION_COOKIE_NAME)?.value;
+  return !!sessionId;
 }
 
 export function middleware(request) {
   const { pathname } = request.nextUrl;
 
-  // Skip middleware for static files and API routes (API routes have their own auth)
+  // Skip middleware for static files and API routes (API routes handle their own auth)
   if (
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api') ||
-    pathname.includes('.') // Static files
+    pathname.includes('.')
   ) {
     return NextResponse.next();
   }
 
-  // Get access token from cookies
-  const accessToken = request.cookies.get('accessToken')?.value;
-  const user = verifyToken(accessToken);
-  const isAuthenticated = !!user;
+  // Check if user has jeton_session cookie
+  const hasSession = hasSessionCookie(request);
 
   // Public routes - allow everyone
   if (matchesRoute(pathname, publicRoutes)) {
@@ -111,46 +116,35 @@ export function middleware(request) {
 
   // Auth routes - redirect to dashboard if already logged in
   if (matchesRoute(pathname, authRoutes)) {
-    if (isAuthenticated) {
+    if (hasSession) {
       return NextResponse.redirect(new URL('/dashboard', request.url));
     }
     return NextResponse.next();
   }
 
-  // Protected routes - require authentication
-  if (!isAuthenticated) {
-    const loginUrl = new URL('/auth/login', request.url);
-    loginUrl.searchParams.set('redirect', pathname);
-    return NextResponse.redirect(loginUrl);
-  }
-
-  // Role-based protection
-  const userRole = user?.role;
-
-  // Check admin routes
-  if (matchesRoute(pathname, roleProtectedRoutes.admin)) {
-    const allowedRoles = ['super_admin', 'admin', 'school_admin'];
-    if (!allowedRoles.includes(userRole)) {
-      return NextResponse.redirect(new URL('/403', request.url));
+  // Authenticated routes (restricted access, school setup) - require jeton_session cookie
+  if (matchesRoute(pathname, authenticatedRoutes)) {
+    if (!hasSession) {
+      const loginUrl = new URL('/auth/login', request.url);
+      loginUrl.searchParams.set('redirect', pathname);
+      return NextResponse.redirect(loginUrl);
     }
+    // Allow access - locked state is validated client-side
+    return NextResponse.next();
   }
 
-  // Check teacher routes
-  if (matchesRoute(pathname, roleProtectedRoutes.teacher)) {
-    const allowedRoles = ['super_admin', 'admin', 'school_admin', 'teacher'];
-    if (!allowedRoles.includes(userRole)) {
-      return NextResponse.redirect(new URL('/403', request.url));
+  // Protected routes - require jeton_session cookie
+  if (matchesRoute(pathname, protectedRoutes)) {
+    if (!hasSession) {
+      const loginUrl = new URL('/auth/login', request.url);
+      loginUrl.searchParams.set('redirect', pathname);
+      return NextResponse.redirect(loginUrl);
     }
+    // Allow access - full validation happens in API/server components
+    return NextResponse.next();
   }
 
-  // Check staff routes
-  if (matchesRoute(pathname, roleProtectedRoutes.staff)) {
-    const allowedRoles = ['super_admin', 'admin', 'school_admin', 'teacher', 'staff'];
-    if (!allowedRoles.includes(userRole)) {
-      return NextResponse.redirect(new URL('/403', request.url));
-    }
-  }
-
+  // Default: allow access
   return NextResponse.next();
 }
 

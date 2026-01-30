@@ -127,6 +127,7 @@ export const api = {
     login: (data) => apiClient.post('/api/auth/login', data),
     logout: () => apiClient.post('/api/auth/logout'),
     refresh: () => apiClient.post('/api/auth/refresh'),
+    getMe: () => apiClient.get('/api/auth/me'),
   },
 
   // User endpoints

@@ -1,108 +1,92 @@
 /**
- * User Registration Endpoint
+ * Registration Endpoint (Jeton Compatible)
  * POST /api/auth/register
  * 
- * DRAIS v0.0.0042 - Enhanced with Access/Refresh tokens
+ * Creates new user and automatically logs them in
+ * Sets jeton_session HTTP-only cookie
  */
 
 import { NextResponse } from 'next/server';
-import { createUser } from '@/lib/services/user.service';
-import { generateTokens, setAuthCookies, createSessionData } from '@/lib/auth/jwt-enhanced';
+import { createUser, updateLastLogin } from '@/lib/auth.js';
+import { createSession, getSecureCookieOptions } from '@/lib/session.js';
 
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { username, email, password, name, role = 'client', school_id } = body;
+    const { email, password } = body;
 
-    // Validation
-    if (!username || !email || !password) {
+    // Input validation
+    if (!email || !password) {
       return NextResponse.json(
-        { success: false, error: 'Username, email, and password are required' },
+        { error: 'Email and password are required' },
         { status: 400 }
       );
     }
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    if (typeof email !== 'string' || typeof password !== 'string') {
       return NextResponse.json(
-        { success: false, error: 'Invalid email format' },
+        { error: 'Email and password must be strings' },
         { status: 400 }
       );
     }
 
-    // Validate password strength (min 8 chars, 1 uppercase, 1 number)
     if (password.length < 8) {
       return NextResponse.json(
-        { success: false, error: 'Password must be at least 8 characters long' },
+        { error: 'Password must be at least 8 characters' },
         { status: 400 }
       );
     }
 
-    const passwordRegex = /^(?=.*[A-Z])(?=.*\d)/;
-    if (!passwordRegex.test(password)) {
-      return NextResponse.json(
-        { success: false, error: 'Password must contain at least 1 uppercase letter and 1 number' },
-        { status: 400 }
-      );
-    }
+    // Create user with hashed password
+    const user = await createUser(email, password);
 
-    // Validate role
-    const validRoles = ['super_admin', 'school_admin', 'admin', 'teacher', 'staff', 'student', 'parent', 'client'];
-    if (role && !validRoles.includes(role)) {
-      return NextResponse.json(
-        { success: false, error: `Invalid role. Must be one of: ${validRoles.join(', ')}` },
-        { status: 400 }
-      );
-    }
+    // Auto-login: Create session
+    const sessionId = await createSession(user.id);
 
-    // Create user
-    const user = await createUser({
-      username,
-      email,
-      password,
-      name: name || username,
-      role,
-      school_id,
-    });
+    // Update last login (non-blocking)
+    updateLastLogin(user.id).catch(err => 
+      console.error('[Register] Update last login error:', err)
+    );
 
-    // Remove password from response
-    delete user.password;
-
-    // Generate tokens
-    const tokens = generateTokens(user);
-
-    // Create session data
-    const sessionData = createSessionData(user, tokens);
-
-    // Create response with cookies
-    let response = NextResponse.json(
+    // Create response with user data (frontend needs this)
+    const response = NextResponse.json(
       {
         success: true,
-        message: 'Registration successful',
-        data: sessionData,
+        message: 'User registered successfully',
+        data: {
+          user: {
+            id: user.id,
+            email: user.email,
+            role: user.role,
+            status: user.status,
+          },
+        },
+        redirectTo: '/dashboard',
       },
       { status: 201 }
     );
 
-    // Set HttpOnly cookies
-    response = setAuthCookies(response, tokens);
+    // Set jeton_session HTTP-only cookie
+    response.cookies.set(
+      'jeton_session',
+      sessionId,
+      getSecureCookieOptions()
+    );
 
     return response;
-
   } catch (error) {
-    console.error('Registration error:', error);
+    console.error('[Register] Error:', error);
 
-    // Handle specific errors
-    if (error.message.includes('already registered') || error.message.includes('already taken')) {
+    // Check for specific errors
+    if (error.message === 'User already exists') {
       return NextResponse.json(
-        { success: false, error: error.message },
-        { status: 409 } // Conflict
+        { error: 'Email already registered' },
+        { status: 400 }
       );
     }
 
     return NextResponse.json(
-      { success: false, error: 'Registration failed. Please try again.' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

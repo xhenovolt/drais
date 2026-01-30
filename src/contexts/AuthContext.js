@@ -17,12 +17,39 @@ export function AuthProvider({ children }) {
   const router = useRouter();
 
   useEffect(() => {
-    // Load user from localStorage on mount
-    const savedUser = getCurrentUser();
-    if (savedUser) {
-      setUser(savedUser);
-    }
-    setLoading(false);
+    // Check session from server via /api/auth/me endpoint
+    const checkAuth = async () => {
+      try {
+        // First try to get user from localStorage for faster UX
+        const savedUser = getCurrentUser();
+        if (savedUser) {
+          setUser(savedUser);
+        }
+
+        // Then validate with server
+        try {
+          const response = await api.auth.getMe();
+          if (response?.data) {
+            const userData = response.data.id 
+              ? response.data 
+              : response.data.data?.user || response.data.user;
+            
+            if (userData?.id) {
+              setUser(userData);
+              saveUser(userData);
+            }
+          }
+        } catch (serverError) {
+          // Server returned 401 or error - session is invalid
+          setUser(null);
+          clearUser();
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkAuth();
   }, []);
 
   const login = async (credentials) => {
@@ -33,10 +60,14 @@ export function AuthProvider({ children }) {
         const userData = response.data.data.user;
         setUser(userData);
         saveUser(userData);
-        return { success: true, data: userData };
+        return { 
+          success: true, 
+          data: userData,
+          redirectTo: response.data.redirectTo || '/dashboard',
+        };
       }
 
-      return { success: false, error: 'Login failed' };
+      return { success: false, error: response.data.error || 'Login failed' };
     } catch (error) {
       const apiError = handleApiError(error);
       return { success: false, error: apiError.message };
@@ -73,13 +104,37 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const refreshUser = async () => {
+    try {
+      const response = await api.auth.getMe();
+      if (response?.data) {
+        const userData = response.data.id 
+          ? response.data 
+          : response.data.data?.user || response.data.user;
+        
+        if (userData?.id) {
+          setUser(userData);
+          saveUser(userData);
+          return userData;
+        }
+      }
+    } catch (error) {
+      console.error('Failed to refresh user:', error);
+      setUser(null);
+      clearUser();
+    }
+    return null;
+  };
+
   const value = {
     user,
     loading,
     login,
     register,
     logout,
+    refreshUser,
     isAuthenticated: !!user,
+    isSchoolSetupComplete: user?.isOnboardingComplete,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -131,4 +186,13 @@ export function useRequireRole(allowedRoles) {
   }, [user, loading, allowedRoles, router]);
 
   return { user, loading };
+}
+
+/**
+ * Hook to check if user is trying to access a locked feature
+ * Returns true if user is authenticated but school setup is incomplete
+ */
+export function useIsLocked() {
+  const { user, loading } = useAuth();
+  return !loading && !!user && (!user.school_name || !user.school_address);
 }

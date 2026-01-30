@@ -1,6 +1,6 @@
 {
   "name": "drais",
-  "version": "0.0.0041",
+  "version": "0.0.0298",
   "description": "DRAIS - School Management System by Xhenvolt",
   "private": true,
   "scripts": {
@@ -9,7 +9,8 @@
     "start": "next start",
     "generate:favicons": "node scripts/generate-favicons.js",
     "generate:og-images": "node scripts/generate-og-images.js",
-    "generate:assets": "npm run generate:favicons && npm run generate:og-images"
+    "generate:assets": "npm run generate:favicons && npm run generate:og-images",
+    "migrate:postgres": "node scripts/migrate-to-postgres.js"
   },
   "dependencies": {
     "@fullcalendar/core": "^6.1.19",
@@ -44,6 +45,8 @@
     "mysql2": "^3.15.3",
     "nanoid": "^5.1.6",
     "next": "16.0.6",
+    "next-cloudinary": "^6.17.5",
+    "pg": "^8.17.2",
     "react": "19.2.0",
     "react-day-picker": "^9.0.0",
     "react-dom": "19.2.0",

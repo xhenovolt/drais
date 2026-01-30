@@ -5,48 +5,61 @@
 
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login, loading: authLoading } = useAuth();
   
   const [formData, setFormData] = useState({
-    email: '',
+    identifier: '',
     password: '',
   });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
+    setError(''); // Clear error when user starts typing
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
 
     try {
-      const result = await login(formData);
+      // Convert identifier to email for API (Jeton expects email field)
+      const loginData = {
+        email: formData.identifier,
+        password: formData.password,
+      };
+      
+      const result = await login(loginData);
 
       if (result.success) {
         toast.success('Login successful!');
         
-        // Redirect to intended page or dashboard
-        const redirect = searchParams.get('redirect') || '/dashboard';
+        // Use redirectTo from API response if available, otherwise use query param or dashboard
+        const redirect = result.redirectTo || searchParams.get('redirect') || '/dashboard';
         router.push(redirect);
       } else {
-        toast.error(result.error || 'Login failed');
+        const errorMsg = result.error || 'Login failed';
+        setError(errorMsg);
+        toast.error(errorMsg);
       }
     } catch (error) {
-      toast.error('An error occurred during login');
+      const errorMsg = 'An error occurred during login';
+      setError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -76,20 +89,28 @@ export default function LoginPage() {
             </p>
           </div>
 
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+              <p className="text-red-700 dark:text-red-400 font-semibold text-center">
+                {error}
+              </p>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Email or Username
+              <label htmlFor="identifier" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Email, Username, or Phone
               </label>
               <input
                 type="text"
-                id="email"
-                name="email"
-                value={formData.email}
+                id="identifier"
+                name="identifier"
+                value={formData.identifier}
                 onChange={handleChange}
                 required
                 className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                placeholder="Enter your email or username"
+                placeholder="Enter your email, username, or phone"
               />
             </div>
 
@@ -160,5 +181,12 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><p>Loading...</p></div>}>
+      <LoginContent />
+    </Suspense>
   );
 }

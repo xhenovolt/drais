@@ -1,0 +1,25 @@
+     table_name      
+---------------------
+ assignment
+ attendance
+ documents
+ file_upload
+ lesson
+ message
+ notification
+ onboarding_steps
+ payment_methods
+ payment_plan
+ payment_reminder
+ quiz
+ quiz_attempt
+ school_settings
+ student_contacts
+ student_curriculums
+ student_profiles
+ transactions
+ user_people
+ user_profiles
+ user_sessions
+(21 rows)
+

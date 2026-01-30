@@ -1,9 +1,75 @@
 {
-  "version": "0.0.0041",
+  "version": "0.0.0046",
   "name": "DRAIS",
   "description": "School Management System by Xhenvolt",
-  "lastUpdated": "2025-12-05",
+  "lastUpdated": "2025-01-15",
   "changelog": [
+    {
+      "version": "0.0.0046",
+      "date": "2025-01-15",
+      "changes": [
+        "Implemented secure logout with JWT blacklisting and session destruction",
+        "Created comprehensive financial management backend (9 modules)",
+        "Built fee items management service (CRUD operations)",
+        "Implemented fees allocation engine (single + bulk allocation)",
+        "Created transaction recording system with auto-receipt/invoice generation",
+        "Built professional PDF generation for receipts and invoices (@react-pdf/renderer)",
+        "Implemented bursaries/exemptions module with automatic fee adjustments",
+        "Created periodic financial reports (daily/weekly/monthly/termly)",
+        "Developed AI predictions layer (payment probability, completion dates, cash flow forecast)",
+        "Enhanced user.service.js with 7 new functions (session management, token blacklisting)",
+        "Created complete database migration (11 new tables)",
+        "Added payment methods management (cash, bank, mobile money, cheque, card)",
+        "Implemented class-wise payment trend analysis",
+        "Built anomaly detection for unusual payments (statistical analysis)",
+        "Created comprehensive AI dashboard with high-risk student identification",
+        "Total: ~3,350 lines of production-ready backend code",
+        "All operations use transaction safety for data consistency",
+        "Multi-tenant isolation enforced via school_id in all queries"
+      ],
+      "status": "Backend Complete - API Routes Pending"
+    },
+    {
+      "version": "0.0.0044",
+      "date": "2025-12-06",
+      "changes": [
+        "Implemented pricing plans API endpoint (GET /api/pricing/plans)",
+        "Enhanced payment selection with instant trial activation (30-day access)",
+        "Created payment confirmation API for paid plans (POST /api/payment/confirm)",
+        "Added confirmPayment function with mock payment gateway integration",
+        "Implemented onboarding completion tracking (onboarding_completed in users table)",
+        "Created onboarding complete API (POST /api/onboarding/complete)",
+        "Added markOnboardingComplete function to onboarding service",
+        "Built module access control middleware with role-based permissions",
+        "Created universal CRUD service for all modules (MySQL & MongoDB compatible)",
+        "Implemented modular API structure for Students, Fees, and HR modules",
+        "Added requireModuleAccess middleware for enforcing permissions",
+        "Fixed schools table AUTO_INCREMENT (52 tables updated)",
+        "Fixed column mapping in createSchool (name, region, district, etc.)",
+        "Added transaction tracking columns to user_payment_plans",
+        "Updated payment_plans trial period to 30 days",
+        "Role-based permissions: Admin (full), Staff (limited), Client (broad access)"
+      ]
+    },
+    {
+      "version": "0.0.0043",
+      "date": "2025-12-06",
+      "changes": [
+        "Implemented public routes (landing, features, pricing, docs, about, contact)",
+        "Enhanced sign-in logic to skip onboarding if already completed",
+        "Added 30-day free trial system with daily countdown",
+        "Created user_trials table with auto-expiration via MySQL events",
+        "Built trial service with activation, status check, and extension",
+        "Added trial API endpoints: /api/trial/activate, /api/trial/status, /api/trial/extend",
+        "Updated dashboard access control to check trial/subscription status",
+        "Created trial countdown UI component for settings page",
+        "Integrated trial activation in payment plan selection",
+        "Add smart redirect in login (dashboard/onboarding/payment based on status)",
+        "Maintained role-based access for Admin, Staff, Client",
+        "Enhanced security with public route filtering"
+      ],
+      "status": "Complete - Ready for Testing"
+    },
     {
       "version": "0.0.0041",
       "date": "2025-12-05",
