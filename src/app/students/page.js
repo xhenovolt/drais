@@ -406,7 +406,7 @@ export default function StudentsPage() {
                             </div>
                           </TableCell>
                           <TableCell className="font-mono">
-                            {student.admission_number || '-'}
+                            {student.admission_no || '-'}
                           </TableCell>
                           <TableCell>
                             {student.class_name || '-'}

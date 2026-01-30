@@ -5,13 +5,8 @@
  * 
  * DRAIS v0.0.0300 - Production Implementation
  * 
- * Database Schema:
- *   students table: Contains student academic placement (links to people via person_id)
- *   people table: Contains personal/demographic data
- *   enrollments table: Tracks enrollment in specific academic year/term
- * 
- * Transaction: Creates person → student → enrollment records
- * Response: Maps DB fields to consistent API contract
+ * Database Schema: students table contains all student data directly
+ * - admission_no, first_name, last_name, dob, gender, email, phone, address, photo_url, status
  */
 
 import { NextResponse } from 'next/server';
@@ -25,7 +20,7 @@ import { getPool } from '@/lib/db/postgres.js';
  * Query params:
  *   page: number (default 1)
  *   limit: number (default 50)
- *   search: string (searches first_name, last_name, admission_number)
+ *   search: string (searches first_name, last_name, admission_no)
  *   class_id: number (optional filter)
  */
 export async function GET(request) {
@@ -51,7 +46,7 @@ export async function GET(request) {
 
     // Search by name or admission number
     if (search) {
-      whereClause += ` AND (p.first_name ILIKE $${paramIndex} OR p.last_name ILIKE $${paramIndex} OR s.admission_number ILIKE $${paramIndex})`;
+      whereClause += ` AND (s.first_name ILIKE $${paramIndex} OR s.last_name ILIKE $${paramIndex} OR s.admission_no ILIKE $${paramIndex})`;
       params.push(`%${search}%`);
       paramIndex++;
     }
@@ -64,41 +59,31 @@ export async function GET(request) {
     }
 
     // Get total count
-    const countQuery = `
-      SELECT COUNT(*) as total 
-      FROM students s 
-      LEFT JOIN people p ON s.person_id = p.id 
-      ${whereClause}
-    `;
+    const countQuery = `SELECT COUNT(*) as total FROM students s ${whereClause}`;
     const countParams = params.slice(0, paramIndex);
     const countResult = await pool.query(countQuery, countParams);
     const total = parseInt(countResult.rows[0].total);
 
-    // Get paginated results with field mapping
-    // Note: Joins people table to get personal details, classes table for class name
+    // Get paginated results - all fields from students table
     const query = `
       SELECT 
         s.id,
-        s.admission_number,
-        p.first_name,
-        p.last_name,
-        p.date_of_birth,
-        p.gender,
-        p.email,
-        p.phone,
-        p.address,
-        p.profile_image_url as photo_url,
+        s.admission_no,
+        s.first_name,
+        s.last_name,
+        s.dob as date_of_birth,
+        s.gender,
+        s.email,
+        s.phone,
+        s.address,
+        s.photo_url,
         s.class_id,
-        c.class_name as class_name,
         s.section_id,
-        s.stream_id,
-        CASE WHEN s.is_active = true AND s.date_of_discharge IS NULL 
-          THEN 'active' ELSE 'inactive' END as status,
+        s.roll_no,
+        s.status,
         s.created_at as enrollment_date,
         s.updated_at
       FROM students s
-      LEFT JOIN people p ON s.person_id = p.id
-      LEFT JOIN classes c ON s.class_id = c.id
       ${whereClause}
       ORDER BY s.created_at DESC
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
@@ -129,7 +114,7 @@ export async function GET(request) {
 
 /**
  * POST /api/modules/students/admissions
- * Create new student (person + student + enrollment)
+ * Create new student admission
  * 
  * Body: {
  *   first_name: string (required),
@@ -139,24 +124,17 @@ export async function GET(request) {
  *   email: string,
  *   phone: string,
  *   address: string,
- *   profile_image_url: string,
+ *   photo_url: string,
  *   class_id: number (optional),
  *   section_id: number (optional),
- *   stream_id: number (optional),
- *   admission_number: string (auto-generated if not provided)
+ *   admission_no: string (auto-generated if not provided)
  * }
- * 
- * Transaction:
- *   1. Insert person record (demographics)
- *   2. Insert student record (academic placement, links to person)
- *   3. Insert enrollment record (if class_id provided)
  */
 export async function POST(request) {
   try {
     const authUser = await requireApiAuthFromCookies();
     const body = await request.json();
     const pool = await getPool();
-    const client = await pool.connect();
     const schoolId = authUser.schoolId;
 
     if (!schoolId) {
@@ -171,11 +149,10 @@ export async function POST(request) {
       email,
       phone,
       address,
-      profile_image_url,
+      photo_url,
       class_id,
       section_id,
-      stream_id,
-      admission_number: providedAdmissionNumber
+      admission_no: providedAdmissionNo
     } = body;
 
     // Validate required fields
@@ -186,94 +163,73 @@ export async function POST(request) {
       );
     }
 
-    try {
-      await client.query('BEGIN');
-
-      // 1. Create person record with demographics
-      const personResult = await client.query(
-        `INSERT INTO people (
-          school_id, first_name, last_name, gender, date_of_birth, 
-          email, phone, address, profile_image_url, is_active,
-          created_at, updated_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-        RETURNING id`,
-        [
-          schoolId,
-          first_name,
-          last_name,
-          gender || null,
-          date_of_birth || null,
-          email || null,
-          phone || null,
-          address || null,
-          profile_image_url || null
-        ]
-      );
-
-      const personId = personResult.rows[0].id;
-
-      // 2. Generate admission number if not provided
-      let admissionNumber = providedAdmissionNumber;
-      if (!admissionNumber) {
-        const year = new Date().getFullYear().toString().slice(-2);
-        const randomNum = Math.floor(Math.random() * 100000).toString().padStart(5, '0');
-        admissionNumber = `ADM-${year}-${randomNum}`;
-      }
-
-      // 3. Create student record (academic placement)
-      const studentResult = await client.query(
-        `INSERT INTO students (
-          school_id, person_id, admission_number, class_id, section_id, stream_id,
-          is_active, created_at, updated_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-        RETURNING id, admission_number, created_at`,
-        [schoolId, personId, admissionNumber, class_id || null, section_id || null, stream_id || null]
-      );
-
-      const student = studentResult.rows[0];
-
-      // 4. Create enrollment record if class_id provided
-      if (class_id) {
-        await client.query(
-          `INSERT INTO enrollments (
-            school_id, student_id, class_id, section_id,
-            enrollment_status, enrollment_date,
-            created_at, updated_at
-          ) VALUES ($1, $2, $3, $4, 'active', CURRENT_DATE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
-          [schoolId, student.id, class_id, section_id || null]
-        );
-      }
-
-      await client.query('COMMIT');
-
-      // Return mapped response
-      return NextResponse.json({
-        success: true,
-        data: {
-          id: student.id,
-          admission_number: student.admission_number,
-          first_name,
-          last_name,
-          gender: gender || null,
-          date_of_birth: date_of_birth || null,
-          email: email || null,
-          phone: phone || null,
-          address: address || null,
-          photo_url: profile_image_url || null,
-          class_id: class_id || null,
-          section_id: section_id || null,
-          stream_id: stream_id || null,
-          status: 'active',
-          enrollment_date: student.created_at
-        }
-      }, { status: 201 });
-
-    } catch (transactionError) {
-      await client.query('ROLLBACK');
-      throw transactionError;
-    } finally {
-      client.release();
+    // Generate admission_no if not provided
+    let admission_no = providedAdmissionNo;
+    if (!admission_no) {
+      const year = new Date().getFullYear().toString().slice(-2);
+      const randomNum = Math.floor(Math.random() * 100000).toString().padStart(5, '0');
+      admission_no = `ADM-${year}-${randomNum}`;
     }
+
+    // Check uniqueness of admission_no for this school
+    const checkResult = await pool.query(
+      'SELECT id FROM students WHERE school_id = $1 AND admission_no = $2',
+      [schoolId, admission_no]
+    );
+
+    if (checkResult.rows.length > 0) {
+      return NextResponse.json(
+        { error: 'Admission number already exists for this school' },
+        { status: 409 }
+      );
+    }
+
+    // Create student record
+    const result = await pool.query(
+      `INSERT INTO students (
+        school_id, admission_no, first_name, last_name,
+        gender, dob, email, phone, address, photo_url,
+        class_id, section_id, status
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, 'active')
+      RETURNING id, admission_no, first_name, last_name, gender, dob, email, phone, address, photo_url, class_id, section_id, status, created_at`,
+      [
+        schoolId,
+        admission_no,
+        first_name.trim(),
+        last_name.trim(),
+        gender || null,
+        date_of_birth || null,
+        email || null,
+        phone || null,
+        address || null,
+        photo_url || null,
+        class_id || null,
+        section_id || null
+      ]
+    );
+
+    const student = result.rows[0];
+
+    // Return mapped response
+    return NextResponse.json({
+      success: true,
+      data: {
+        id: student.id,
+        admission_no: student.admission_no,
+        first_name: student.first_name,
+        last_name: student.last_name,
+        gender: student.gender,
+        date_of_birth: student.dob,
+        email: student.email,
+        phone: student.phone,
+        address: student.address,
+        photo_url: student.photo_url,
+        class_id: student.class_id,
+        section_id: student.section_id,
+        status: student.status,
+        enrollment_date: student.created_at
+      }
+    }, { status: 201 });
 
   } catch (error) {
     if (error.status === 401) {
