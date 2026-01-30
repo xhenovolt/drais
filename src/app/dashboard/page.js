@@ -438,6 +438,7 @@ export default function Dashboard() {
         {/* Charts are currently hidden as we transition to real data only */}
         {/* Future: Charts will be rendered from actual database queries */}
 
+        <Tabs defaultValue="performance" className="space-y-6">
           {/* Performance Tab */}
           <TabsContent value="performance" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
