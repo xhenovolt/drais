@@ -23,17 +23,6 @@ export default function CertificateManagement() {
     } else {
       // No certificates exist yet - show empty state
       setCertificates([]);
-          type: 'excellence',
-          title: 'Excellence in Mathematics',
-          students: ['ST001'],
-          status: 'issued',
-          issuedDate: '2025-11-15',
-          issuedBy: 'Dr. Ahmed Khalil',
-          template: 'gold',
-          count: 1
-        }
-      ];
-      // Don't auto-create mock data - wait for real certificates from database
     }
   }, []);
 

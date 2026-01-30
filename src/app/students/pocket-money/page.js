@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/dashboard-layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,24 +8,40 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { motion } from "framer-motion";
-import { Wallet, Plus, TrendingUp, DollarSign, Search } from "lucide-react";
+import { Wallet, Plus, TrendingUp, DollarSign, Search, Loader, AlertCircle, Info } from "lucide-react";
 import { DRAIS_VERSION } from "@/lib/version";
 
 export default function PocketMoneyPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [topUpDialogOpen, setTopUpDialogOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [students, setStudents] = useState([]);
 
-  const students = Array.from({ length: 30 }, (_, i) => ({
-    id: `STD${String(i + 1).padStart(5, "0")}`,
-    name: ["James Okello", "Sarah Nambi", "John Mukasa", "Mary Nalongo"][i % 4],
-    class: `Grade ${(i % 6) + 1}`,
-    balance: Math.floor(Math.random() * 50000) + 5000,
-    lastTransaction: `2025-12-${String(Math.floor(Math.random() * 28) + 1).padStart(2, "0")}`,
-  }));
+  useEffect(() => {
+    fetchStudents();
+  }, []);
 
-  const totalBalance = students.reduce((sum, s) => sum + s.balance, 0);
+  const fetchStudents = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch('/api/modules/students/admissions?limit=100');
+      if (!response.ok) throw new Error('Failed to fetch students');
+      const data = await response.json();
+      setStudents(data.data || []);
+    } catch (err) {
+      setError(err.message);
+      console.error('Fetch students error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const totalBalance = 0; // Placeholder until student_transactions table exists
 
   return (
     <DashboardLayout>
@@ -42,7 +58,28 @@ export default function PocketMoneyPage() {
           </p>
         </motion.div>
 
+        {/* Coming Soon Notice */}
+        <Alert className="bg-blue-50 border-blue-200">
+          <Info className="h-4 w-4 text-blue-600" />
+          <AlertDescription className="text-blue-800">
+            Pocket money feature is coming soon. The underlying database infrastructure is being prepared.
+          </AlertDescription>
+        </Alert>
+
+        {/* Error Alert */}
+        {error && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
         {/* Stats */}
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader className="h-8 w-8 animate-spin text-gray-400" />
+          </div>
+        ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/50">
             <CardContent className="p-6">
@@ -77,7 +114,8 @@ export default function PocketMoneyPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600 dark:text-gray-400">Average Balance</p>
-                  <p className="text-3xl font-bold mt-2">UGX {Math.floor(totalBalance / students.length).toLocaleString()}</p>
+                  <p className="text-3xl font-bold mt-2">UGX 0</p>
+                  <p className="text-xs text-gray-500 mt-1">Coming soon</p>
                 </div>
                 <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center">
                   <DollarSign className="w-7 h-7 text-white" />
@@ -86,6 +124,7 @@ export default function PocketMoneyPage() {
             </CardContent>
           </Card>
         </div>
+        )}
 
         {/* Search */}
         <Card>
@@ -130,19 +169,19 @@ export default function PocketMoneyPage() {
                       transition={{ delay: index * 0.02 }}
                       className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50"
                     >
-                      <td className="py-3 px-4 text-sm font-mono">{student.id}</td>
-                      <td className="py-3 px-4 text-sm font-medium">{student.name}</td>
-                      <td className="py-3 px-4 text-sm">{student.class}</td>
+                      <td className="py-3 px-4 text-sm font-mono">{student.admission_no || student.id}</td>
+                      <td className="py-3 px-4 text-sm font-medium">{`${student.first_name || ''} ${student.last_name || ''}`.trim()}</td>
+                      <td className="py-3 px-4 text-sm">{student.class_id || '-'}</td>
                       <td className="py-3 px-4">
                         <Badge
-                          variant={student.balance > 20000 ? "default" : "warning"}
+                          variant="secondary"
                           className="font-mono"
                         >
-                          UGX {student.balance.toLocaleString()}
+                          UGX 0
                         </Badge>
                       </td>
                       <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">
-                        {student.lastTransaction}
+                        -
                       </td>
                       <td className="py-3 px-4">
                         <Dialog>
@@ -160,21 +199,22 @@ export default function PocketMoneyPage() {
                             <DialogHeader>
                               <DialogTitle>Top Up Pocket Money</DialogTitle>
                               <DialogDescription>
-                                Add money to {student.name}'s account
+                                Add money to {selectedStudent ? `${selectedStudent.first_name} ${selectedStudent.last_name}` : 'student'}'s account
                               </DialogDescription>
                             </DialogHeader>
                             <div className="space-y-4 py-4">
                               <div className="space-y-2">
                                 <Label>Current Balance</Label>
                                 <div className="text-2xl font-bold">
-                                  UGX {student.balance.toLocaleString()}
+                                  UGX 0
                                 </div>
+                                <p className="text-xs text-gray-500">Feature coming soon</p>
                               </div>
                               <div className="space-y-2">
                                 <Label>Top Up Amount</Label>
-                                <Input type="number" placeholder="Enter amount" />
+                                <Input type="number" placeholder="Enter amount" disabled />
                               </div>
-                              <Button className="w-full bg-gradient-to-r from-blue-600 to-purple-600">
+                              <Button className="w-full bg-gradient-to-r from-blue-600 to-purple-600" disabled>
                                 <Plus className="w-4 h-4 mr-2" />
                                 Confirm Top Up
                               </Button>

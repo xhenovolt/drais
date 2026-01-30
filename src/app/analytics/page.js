@@ -47,6 +47,48 @@ const performanceData = [
   { month: "Jun", average: 82, passRate: 93, attendance: 95 },
 ];
 
+const gradeDistribution = [
+  { grade: "A", count: 480, percentage: 12 },
+  { grade: "B", count: 960, percentage: 24 },
+  { grade: "C", count: 1440, percentage: 36 },
+  { grade: "D", count: 800, percentage: 20 },
+  { grade: "F", count: 320, percentage: 8 },
+];
+
+const classPerformance = [
+  { class: "Primary 1", average: 75, passRate: 88 },
+  { class: "Primary 2", average: 78, passRate: 90 },
+  { class: "Primary 3", average: 82, passRate: 93 },
+  { class: "Primary 4", average: 80, passRate: 92 },
+  { class: "Primary 5", average: 85, passRate: 95 },
+  { class: "Primary 6", average: 87, passRate: 96 },
+];
+
+const attendanceData = [
+  { name: "Mon", present: 3800, absent: 200 },
+  { name: "Tue", present: 3850, absent: 150 },
+  { name: "Wed", present: 3900, absent: 100 },
+  { name: "Thu", present: 3920, absent: 80 },
+  { name: "Fri", present: 3880, absent: 120 },
+];
+
+const feeCollectionData = [
+  { month: "Jan", collected: 96.5, outstanding: 3.5 },
+  { month: "Feb", collected: 97.2, outstanding: 2.8 },
+  { month: "Mar", collected: 96.8, outstanding: 3.2 },
+  { month: "Apr", collected: 97.5, outstanding: 2.5 },
+  { month: "May", collected: 98.0, outstanding: 2.0 },
+  { month: "Jun", collected: 97.8, outstanding: 2.2 },
+];
+
+const subjectPerformance = [
+  { subject: "Mathematics", average: 82 },
+  { subject: "English", average: 85 },
+  { subject: "Science", average: 79 },
+  { subject: "History", average: 81 },
+  { subject: "Geography", average: 80 },
+];
+
 // Chart data will be fetched from database - no hardcoded mock data
 const COLORS = ["#10b981", "#3b82f6", "#f59e0b", "#ef4444", "#6366f1"];
 
