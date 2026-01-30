@@ -23,73 +23,35 @@ export default function SuperAdminDashboard() {
   const [systemHealth, setSystemHealth] = useState({});
 
   useEffect(() => {
-    // Load from localStorage or generate mock data
-    const storedSchools = localStorage.getItem('super_admin_schools');
-    if (storedSchools) {
-      setSchools(JSON.parse(storedSchools));
-    } else {
-      const mockSchools = generateMockSchools();
-      setSchools(mockSchools);
-      localStorage.setItem('super_admin_schools', JSON.stringify(mockSchools));
-    }
+    // Load schools from database in Phase 3
+    // For now, show empty state when no data
+    setSchools([]);
 
-    // Generate stats
-    const mockStats = {
-      totalSchools: 247,
-      activeSchools: 231,
-      trialSchools: 16,
-      totalStudents: 156847,
-      totalRevenue: 847650000,
-      monthlyGrowth: 12.4,
-      activeUsers: 1842,
-      avgResponseTime: 145
+    // Initialize stats as empty (will load from database)
+    const emptyStats = {
+      totalSchools: 0,
+      activeSchools: 0,
+      trialSchools: 0,
+      totalStudents: 0,
+      totalRevenue: 0,
+      monthlyGrowth: 0,
+      activeUsers: 0,
+      avgResponseTime: 0
     };
-    setStats(mockStats);
+    setStats(emptyStats);
 
-    // System health
-    const mockHealth = {
-      apiStatus: 'healthy',
-      databaseStatus: 'healthy',
-      storageUsed: 67,
-      cpuUsage: 34,
-      memoryUsage: 58,
-      uptime: 99.97,
-      lastIncident: 'None in last 30 days'
+    // System health (can fetch from monitoring API)
+    const systemHealth = {
+      apiStatus: 'checking...',
+      databaseStatus: 'checking...',
+      storageUsed: 0,
+      cpuUsage: 0,
+      memoryUsage: 0,
+      uptime: 0,
+      lastIncident: 'No data'
     };
-    setSystemHealth(mockHealth);
+    setSystemHealth(systemHealth);
   }, []);
-
-  const generateMockSchools = () => {
-    const schools = [];
-    const names = [
-      'Kampala Islamic Academy', 'Crescent Secondary School', 'Al-Noor Schools',
-      'Bright Future Academy', 'Green Valley School', 'Royal Kings College',
-      'St. Mary\'s International', 'Victory Christian School', 'Noble Minds Academy',
-      'Progressive Learning Center', 'Excel High School', 'Trinity College',
-      'Wisdom Academy', 'Future Leaders School', 'Golden Stars Academy'
-    ];
-    const statuses = ['active', 'active', 'active', 'active', 'trial', 'suspended'];
-    const plans = ['professional', 'premium', 'gold'];
-    const regions = ['Kampala', 'Entebbe', 'Mukono', 'Jinja', 'Mbarara', 'Gulu'];
-
-    for (let i = 0; i < 15; i++) {
-      schools.push({
-        id: `SCH${String(i + 1).padStart(4, '0')}`,
-        name: names[i],
-        region: regions[Math.floor(Math.random() * regions.length)],
-        status: statuses[Math.floor(Math.random() * statuses.length)],
-        plan: plans[Math.floor(Math.random() * plans.length)],
-        students: Math.floor(Math.random() * 2000) + 300,
-        staff: Math.floor(Math.random() * 80) + 20,
-        revenue: Math.floor(Math.random() * 5000000) + 1000000,
-        lastActive: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
-        createdAt: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000).toISOString(),
-        owner: `owner${i + 1}@school.com`,
-        phone: `+256 7${String(Math.floor(Math.random() * 100000000)).padStart(8, '0')}`
-      });
-    }
-    return schools;
-  };
 
   const filteredSchools = schools.filter(school => {
     const matchesSearch = school.name.toLowerCase().includes(searchQuery.toLowerCase()) ||

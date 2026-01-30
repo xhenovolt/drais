@@ -40,51 +40,9 @@ import {
 } from "recharts";
 import { DRAIS_VERSION } from "@/lib/version";
 import Link from "next/link";
+import DashboardEmptyState from "@/components/dashboard-empty-state";
 
-// Mock data for charts
-const studentPerformanceData = [
-  { month: "Jan", avgScore: 72, passRate: 85, students: 3850 },
-  { month: "Feb", avgScore: 75, passRate: 87, students: 3920 },
-  { month: "Mar", avgScore: 78, passRate: 89, students: 4000 },
-  { month: "Apr", avgScore: 76, passRate: 86, students: 4050 },
-  { month: "May", avgScore: 80, passRate: 91, students: 4120 },
-  { month: "Jun", avgScore: 82, passRate: 93, students: 4180 },
-];
-
-const attendanceData = [
-  { day: "Mon", present: 3950, absent: 230, leave: 20 },
-  { day: "Tue", present: 4020, absent: 150, leave: 30 },
-  { day: "Wed", present: 3980, absent: 180, leave: 40 },
-  { day: "Thu", present: 4100, absent: 80, leave: 20 },
-  { day: "Fri", present: 3920, absent: 240, leave: 40 },
-];
-
-const feeCollectionData = [
-  { month: "Jan", collected: 245000, pending: 32000, total: 277000 },
-  { month: "Feb", collected: 268000, pending: 24000, total: 292000 },
-  { month: "Mar", collected: 282000, pending: 18000, total: 300000 },
-  { month: "Apr", collected: 295000, pending: 15000, total: 310000 },
-  { month: "May", collected: 310000, pending: 12000, total: 322000 },
-  { month: "Jun", collected: 325000, pending: 8000, total: 333000 },
-];
-
-const examResultsData = [
-  { grade: "A (90-100)", count: 850, percentage: 20.3 },
-  { grade: "B (80-89)", count: 1450, percentage: 34.6 },
-  { grade: "C (70-79)", count: 1200, percentage: 28.7 },
-  { grade: "D (60-69)", count: 520, percentage: 12.4 },
-  { grade: "F (<60)", count: 180, percentage: 4.0 },
-];
-
-const classPerformanceData = [
-  { class: "Grade 1", students: 450, avgScore: 78, attendance: 92 },
-  { class: "Grade 2", students: 480, avgScore: 76, attendance: 90 },
-  { class: "Grade 3", students: 520, avgScore: 81, attendance: 93 },
-  { class: "Grade 4", students: 500, avgScore: 79, attendance: 91 },
-  { class: "Grade 5", students: 470, avgScore: 83, attendance: 94 },
-  { class: "Grade 6", students: 440, avgScore: 80, attendance: 92 },
-];
-
+// Chart data will be fetched from database - no hardcoded mock data
 const COLORS = ["#10b981", "#3b82f6", "#f59e0b", "#ef4444", "#6366f1"];
 
 const containerVariants = {
@@ -127,6 +85,37 @@ export default function Dashboard() {
   const [selectedSubject, setSelectedSubject] = useState("all");
   const [selectedTeacher, setSelectedTeacher] = useState("all");
   const [filtersExpanded, setFiltersExpanded] = useState(false);
+  const [dashboardData, setDashboardData] = useState(null);
+  const [dashboardError, setDashboardError] = useState(null);
+
+  // Fetch real dashboard data from database
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        // This would fetch from a real API endpoint that queries the database
+        // For now, we'll use a placeholder that returns null to show empty state
+        const response = await fetch('/api/dashboard/stats', {
+          credentials: 'include',
+        });
+        
+        if (!response.ok) {
+          // If API doesn't exist yet or returns error, show empty state
+          setDashboardData({ isEmpty: true });
+          return;
+        }
+
+        const data = await response.json();
+        setDashboardData(data);
+      } catch (error) {
+        console.error('Failed to fetch dashboard data:', error);
+        setDashboardData({ isEmpty: true });
+      }
+    };
+
+    if (user) {
+      fetchDashboardData();
+    }
+  }, [user]);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -150,6 +139,76 @@ export default function Dashboard() {
   // Don't render if not authenticated
   if (!user) {
     return null;
+  }
+
+  // Show empty state if no data is loaded yet
+  if (dashboardData === null) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-8">
+          {!user.isOnboardingComplete ? (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 dark:from-yellow-900/40 dark:via-orange-900/40 dark:to-red-900/40 border-2 border-yellow-500 dark:border-yellow-700 rounded-xl p-6 shadow-lg"
+            >
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div className="flex-1">
+                  <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-1">
+                    ⚠️ Complete Your School Setup
+                  </h3>
+                  <p className="text-sm text-gray-800 dark:text-gray-200">
+                    Some features are locked until you provide your school information. This takes just 5 minutes!
+                  </p>
+                </div>
+                <Link href="/school-setup" className="flex-shrink-0">
+                  <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold whitespace-nowrap">
+                    Complete Setup Now
+                  </Button>
+                </Link>
+              </div>
+            </motion.div>
+          ) : null}
+          <div className="flex items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Show empty state if there's no data
+  if (dashboardData?.isEmpty) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-8">
+          {!user.isOnboardingComplete ? (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 dark:from-yellow-900/40 dark:via-orange-900/40 dark:to-red-900/40 border-2 border-yellow-500 dark:border-yellow-700 rounded-xl p-6 shadow-lg"
+            >
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div className="flex-1">
+                  <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-1">
+                    ⚠️ Complete Your School Setup
+                  </h3>
+                  <p className="text-sm text-gray-800 dark:text-gray-200">
+                    Some features are locked until you provide your school information. This takes just 5 minutes!
+                  </p>
+                </div>
+                <Link href="/school-setup" className="flex-shrink-0">
+                  <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold whitespace-nowrap">
+                    Complete Setup Now
+                  </Button>
+                </Link>
+              </div>
+            </motion.div>
+          ) : null}
+          <DashboardEmptyState />
+        </div>
+      </DashboardLayout>
+    );
   }
 
   const stats = [
@@ -371,53 +430,13 @@ export default function Dashboard() {
           </Card>
         </motion.div>
 
-        {/* Stats Cards */}
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
-        >
-          {stats.map((stat, index) => (
-            <motion.div key={index} variants={itemVariants}>
-              <Card className={`bg-gradient-to-br ${stat.bgColor} border-2 border-transparent hover:border-blue-400 dark:hover:border-blue-600 transition-all duration-300 hover:shadow-xl`}>
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
-                        {stat.name}
-                      </p>
-                      <AnimatedCounter value={stat.value} />
-                      <div className="flex items-center gap-2 mt-3">
-                        {stat.trend === "up" ? (
-                          <TrendingUp className="w-4 h-4 text-green-600" />
-                        ) : (
-                          <TrendingDown className="w-4 h-4 text-red-600" />
-                        )}
-                        <span className={`text-sm font-semibold ${stat.trend === "up" ? "text-green-600" : "text-red-600"}`}>
-                          {stat.change}
-                        </span>
-                        <span className="text-xs text-gray-500">vs last month</span>
-                      </div>
-                    </div>
-                    <div className={`w-14 h-14 bg-gradient-to-br ${stat.color} rounded-xl flex items-center justify-center shadow-lg`}>
-                      <stat.icon className="w-7 h-7 text-white" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
-        </motion.div>
+        {/* Real Data Section - Currently showing empty state */}
+        {/* In production, this section will be populated with real database queries */}
+        {/* Stats Cards - Will render when data exists */}
 
-        {/* Charts Section */}
-        <Tabs defaultValue="performance" className="space-y-6">
-          <TabsList className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-            <TabsTrigger value="performance">Performance</TabsTrigger>
-            <TabsTrigger value="attendance">Attendance</TabsTrigger>
-            <TabsTrigger value="fees">Fees</TabsTrigger>
-            <TabsTrigger value="exams">Exams</TabsTrigger>
-          </TabsList>
+        {/* Charts Section - Will display real data when available */}
+        {/* Charts are currently hidden as we transition to real data only */}
+        {/* Future: Charts will be rendered from actual database queries */}
 
           {/* Performance Tab */}
           <TabsContent value="performance" className="space-y-6">

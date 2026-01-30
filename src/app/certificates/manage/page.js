@@ -21,43 +21,8 @@ export default function CertificateManagement() {
     if (saved) {
       setCertificates(JSON.parse(saved));
     } else {
-      // Mock data
-      const mockCerts = [
-        {
-          id: 'CERT-001',
-          type: 'achievement',
-          title: 'Academic Achievement Certificate',
-          students: ['ST001', 'ST002', 'ST003'],
-          status: 'issued',
-          issuedDate: '2025-11-25',
-          issuedBy: 'Dr. Ahmed Khalil',
-          template: 'classic',
-          count: 3
-        },
-        {
-          id: 'CERT-002',
-          type: 'tahfiz',
-          title: 'Tahfiz Completion Certificate',
-          students: ['ST004'],
-          status: 'pending',
-          issuedDate: '2025-11-28',
-          issuedBy: 'Sheikh Omar',
-          template: 'islamic',
-          count: 1
-        },
-        {
-          id: 'CERT-003',
-          type: 'participation',
-          title: 'Science Fair Participation',
-          students: ['ST005', 'ST006', 'ST007', 'ST008'],
-          status: 'issued',
-          issuedDate: '2025-11-20',
-          issuedBy: 'Ms. Fatima',
-          template: 'modern',
-          count: 4
-        },
-        {
-          id: 'CERT-004',
+      // No certificates exist yet - show empty state
+      setCertificates([]);
           type: 'excellence',
           title: 'Excellence in Mathematics',
           students: ['ST001'],
@@ -68,8 +33,7 @@ export default function CertificateManagement() {
           count: 1
         }
       ];
-      setCertificates(mockCerts);
-      localStorage.setItem('generated_certificates', JSON.stringify(mockCerts));
+      // Don't auto-create mock data - wait for real certificates from database
     }
   }, []);
 

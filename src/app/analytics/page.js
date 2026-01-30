@@ -47,48 +47,7 @@ const performanceData = [
   { month: "Jun", average: 82, passRate: 93, attendance: 95 },
 ];
 
-const classPerformance = [
-  { class: "Grade 1", students: 45, average: 78, passRate: 88 },
-  { class: "Grade 2", students: 48, average: 76, passRate: 85 },
-  { class: "Grade 3", students: 52, average: 81, passRate: 92 },
-  { class: "Grade 4", students: 50, average: 79, passRate: 89 },
-  { class: "Grade 5", students: 47, average: 83, passRate: 94 },
-  { class: "Grade 6", students: 44, average: 80, passRate: 90 },
-];
-
-const attendanceData = [
-  { name: "Mon", present: 3850, absent: 150 },
-  { name: "Tue", present: 3920, absent: 80 },
-  { name: "Wed", present: 3880, absent: 120 },
-  { name: "Thu", present: 3950, absent: 50 },
-  { name: "Fri", present: 3820, absent: 180 },
-];
-
-const feeCollectionData = [
-  { month: "Jan", collected: 124500, pending: 18500 },
-  { month: "Feb", collected: 132000, pending: 12000 },
-  { month: "Mar", collected: 145000, pending: 9500 },
-  { month: "Apr", collected: 138500, pending: 14000 },
-  { month: "May", collected: 152000, pending: 7800 },
-  { month: "Jun", collected: 158000, pending: 5200 },
-];
-
-const subjectPerformance = [
-  { subject: "Mathematics", average: 78, students: 286 },
-  { subject: "English", average: 82, students: 286 },
-  { subject: "Science", average: 75, students: 286 },
-  { subject: "Social Studies", average: 80, students: 286 },
-  { subject: "ICT", average: 85, students: 286 },
-];
-
-const gradeDistribution = [
-  { grade: "A", count: 450, percentage: 28 },
-  { grade: "B", count: 580, percentage: 36 },
-  { grade: "C", count: 420, percentage: 26 },
-  { grade: "D", count: 120, percentage: 7 },
-  { grade: "F", count: 50, percentage: 3 },
-];
-
+// Chart data will be fetched from database - no hardcoded mock data
 const COLORS = ["#10b981", "#3b82f6", "#f59e0b", "#ef4444", "#6366f1"];
 
 const containerVariants = {

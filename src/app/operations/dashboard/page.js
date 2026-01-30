@@ -46,123 +46,29 @@ export default function OperationsDashboardPage() {
   const [selectedClass, setSelectedClass] = useState("all");
   const [selectedDepartment, setSelectedDepartment] = useState("all");
 
-  // Mock data for key metrics
-  const metrics = [
-    {
-      title: "Total Students",
-      value: "4,247",
-      change: "+12.5%",
-      trend: "up",
-      icon: Users,
-      color: "from-blue-500 to-cyan-500",
-      textColor: "text-blue-600",
-      bgColor: "bg-blue-50 dark:bg-blue-950/30",
-    },
-    {
-      title: "Total Staff",
-      value: "342",
-      change: "+3.2%",
-      trend: "up",
-      icon: UserCheck,
-      color: "from-purple-500 to-pink-500",
-      textColor: "text-purple-600",
-      bgColor: "bg-purple-50 dark:bg-purple-950/30",
-    },
-    {
-      title: "Fees Collected",
-      value: "UGX 8.4B",
-      change: "+18.7%",
-      trend: "up",
-      icon: DollarSign,
-      color: "from-green-500 to-emerald-500",
-      textColor: "text-green-600",
-      bgColor: "bg-green-50 dark:bg-green-950/30",
-    },
-    {
-      title: "Attendance Rate",
-      value: "94.8%",
-      change: "+2.1%",
-      trend: "up",
-      icon: Calendar,
-      color: "from-orange-500 to-yellow-500",
-      textColor: "text-orange-600",
-      bgColor: "bg-orange-50 dark:bg-orange-950/30",
-    },
-    {
-      title: "Discipline Cases",
-      value: "127",
-      change: "-8.3%",
-      trend: "down",
-      icon: AlertTriangle,
-      color: "from-red-500 to-rose-500",
-      textColor: "text-red-600",
-      bgColor: "bg-red-50 dark:bg-red-950/30",
-    },
-    {
-      title: "Active Classes",
-      value: "48",
-      change: "0%",
-      trend: "neutral",
-      icon: Building,
-      color: "from-indigo-500 to-blue-500",
-      textColor: "text-indigo-600",
-      bgColor: "bg-indigo-50 dark:bg-indigo-950/30",
-    },
-  ];
+  // Data loading state (will be fetched from database in Phase 3)
+  const [operationsData, setOperationsData] = useState(null);
 
-  // Fees vs Expenses data
-  const feesExpensesData = [
-    { month: "Jan", fees: 650000000, expenses: 420000000 },
-    { month: "Feb", fees: 680000000, expenses: 445000000 },
-    { month: "Mar", fees: 720000000, expenses: 460000000 },
-    { month: "Apr", fees: 850000000, expenses: 520000000 },
-    { month: "May", fees: 920000000, expenses: 580000000 },
-    { month: "Jun", fees: 780000000, expenses: 490000000 },
-    { month: "Jul", fees: 710000000, expenses: 470000000 },
-    { month: "Aug", fees: 890000000, expenses: 540000000 },
-    { month: "Sep", fees: 950000000, expenses: 610000000 },
-    { month: "Oct", fees: 880000000, expenses: 560000000 },
-    { month: "Nov", fees: 920000000, expenses: 590000000 },
-    { month: "Dec", fees: 840000000, expenses: 530000000 },
-  ];
+  // Placeholder for real data fetching
+  // useEffect(() => {
+  //   const fetchOperationsData = async () => {
+  //     try {
+  //       const response = await fetch('/api/operations/dashboard');
+  //       const data = await response.json();
+  //       setOperationsData(data);
+  //     } catch (error) {
+  //       setOperationsData({ isEmpty: true });
+  //     }
+  //   };
+  //   fetchOperationsData();
+  // }, []);
 
-  // Student attendance trends
-  const attendanceTrends = [
-    { week: "Week 1", attendance: 92.5, target: 95 },
-    { week: "Week 2", attendance: 94.2, target: 95 },
-    { week: "Week 3", attendance: 93.8, target: 95 },
-    { week: "Week 4", attendance: 95.1, target: 95 },
-    { week: "Week 5", attendance: 94.7, target: 95 },
-    { week: "Week 6", attendance: 96.2, target: 95 },
-    { week: "Week 7", attendance: 95.5, target: 95 },
-    { week: "Week 8", attendance: 94.9, target: 95 },
-  ];
-
-  // Disciplinary trends
-  const disciplinaryTrends = [
-    { month: "Jan", minor: 15, moderate: 8, severe: 2 },
-    { month: "Feb", minor: 12, moderate: 6, severe: 1 },
-    { month: "Mar", minor: 18, moderate: 10, severe: 3 },
-    { month: "Apr", minor: 14, moderate: 7, severe: 2 },
-    { month: "May", minor: 10, moderate: 5, severe: 1 },
-    { month: "Jun", minor: 8, moderate: 4, severe: 1 },
-    { month: "Jul", minor: 16, moderate: 9, severe: 2 },
-    { month: "Aug", minor: 13, moderate: 7, severe: 2 },
-    { month: "Sep", minor: 11, moderate: 6, severe: 1 },
-    { month: "Oct", minor: 9, moderate: 5, severe: 1 },
-    { month: "Nov", minor: 7, moderate: 4, severe: 0 },
-    { month: "Dec", minor: 6, moderate: 3, severe: 1 },
-  ];
-
-  // Department performance
-  const departmentData = [
-    { name: "Sciences", value: 28, color: "#3b82f6" },
-    { name: "Arts", value: 22, color: "#8b5cf6" },
-    { name: "Languages", value: 18, color: "#10b981" },
-    { name: "Mathematics", value: 16, color: "#f59e0b" },
-    { name: "Sports", value: 10, color: "#ef4444" },
-    { name: "Other", value: 6, color: "#6b7280" },
-  ];
+  // Empty state when no data available
+  const metrics = [];
+  const feesExpensesData = [];
+  const attendanceTrends = [];
+  const disciplinaryTrends = [];
+  const departmentData = [];
 
   return (
     <div className="space-y-8">

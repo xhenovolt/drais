@@ -23,108 +23,31 @@ export default function AdvancedAnalyticsPage() {
     { value: "term3", label: "Term 3 - 2024" },
   ];
 
-  // Attendance Trends Data
-  const attendanceTrends = [
-    { month: "Jan", attendance: 92.5, target: 95, present: 3865, absent: 315 },
-    { month: "Feb", attendance: 93.2, target: 95, present: 3892, absent: 288 },
-    { month: "Mar", attendance: 91.8, target: 95, present: 3831, absent: 349 },
-    { month: "Apr", attendance: 94.1, target: 95, present: 3933, absent: 247 },
-    { month: "May", attendance: 93.6, target: 95, present: 3909, absent: 271 },
-    { month: "Jun", attendance: 94.8, target: 95, present: 3958, absent: 222 },
-    { month: "Jul", attendance: 93.9, target: 95, present: 3920, absent: 260 },
-    { month: "Aug", attendance: 94.7, target: 95, present: 3954, absent: 226 },
-  ];
 
-  // Student Performance Trends
-  const performanceTrends = [
-    { month: "Jan", avgScore: 68, topScore: 89, passRate: 72 },
-    { month: "Feb", avgScore: 70, topScore: 91, passRate: 75 },
-    { month: "Mar", avgScore: 72, topScore: 92, passRate: 78 },
-    { month: "Apr", avgScore: 75, topScore: 94, passRate: 81 },
-    { month: "May", avgScore: 77, topScore: 95, passRate: 83 },
-    { month: "Jun", avgScore: 79, topScore: 96, passRate: 86 },
-    { month: "Jul", avgScore: 81, topScore: 97, passRate: 88 },
-    { month: "Aug", avgScore: 81.3, topScore: 98, passRate: 89.2 },
-  ];
+  // Data loading state (will be fetched from database in Phase 3)
+  const [analyticsData, setAnalyticsData] = useState(null);
 
-  // Fees Collection Trends
-  const feesCollectionTrends = [
-    { term: "Term 1 '23", collected: 82, target: 95, amount: 652000000 },
-    { term: "Term 2 '23", collected: 87, target: 95, amount: 692000000 },
-    { term: "Term 3 '23", collected: 91, target: 95, amount: 724000000 },
-    { term: "Term 1 '24", collected: 89, target: 95, amount: 708000000 },
-    { term: "Term 2 '24", collected: 93, target: 95, amount: 740000000 },
-    { term: "Term 3 '24", collected: 94.5, target: 95, amount: 752000000 },
-  ];
+  // Placeholder for real data fetching
+  // useEffect(() => {
+  //   const fetchAnalyticsData = async () => {
+  //     try {
+  //       const response = await fetch('/api/analytics/advanced');
+  //       const data = await response.json();
+  //       setAnalyticsData(data);
+  //     } catch (error) {
+  //       setAnalyticsData({ isEmpty: true });
+  //     }
+  //   };
+  //   fetchAnalyticsData();
+  // }, []);
 
-  // Class Performance Breakdown
-  const classPerformance = [
-    { class: "S1A", avgScore: 78.5, students: 42, atRisk: 5 },
-    { class: "S1B", avgScore: 76.2, students: 40, atRisk: 7 },
-    { class: "S2A", avgScore: 81.3, students: 45, atRisk: 4 },
-    { class: "S2B", avgScore: 79.8, students: 43, atRisk: 6 },
-    { class: "S3A", avgScore: 83.1, students: 38, atRisk: 3 },
-    { class: "S3B", avgScore: 80.4, students: 41, atRisk: 5 },
-    { class: "S4A", avgScore: 84.7, students: 39, atRisk: 2 },
-    { class: "S4B", avgScore: 82.9, students: 37, atRisk: 4 },
-    { class: "S5A", avgScore: 86.2, students: 35, atRisk: 1 },
-    { class: "S5B", avgScore: 85.1, students: 33, atRisk: 2 },
-  ];
-
-  // Subject Performance Distribution
-  const subjectDistribution = [
-    { name: "Mathematics", value: 542, color: "#3b82f6" },
-    { name: "Physics", value: 389, color: "#8b5cf6" },
-    { name: "Chemistry", value: 412, color: "#10b981" },
-    { name: "Biology", value: 456, color: "#06b6d4" },
-    { name: "English", value: 623, color: "#f59e0b" },
-    { name: "History", value: 298, color: "#6366f1" },
-    { name: "Others", value: 460, color: "#ec4899" },
-  ];
-
-  // Predictive Metrics
-  const predictiveMetrics = [
-    {
-      title: "Students at Risk",
-      current: 47,
-      trend: -8,
-      percentage: "1.1%",
-      prediction: "Expected to reduce to 39 by term end",
-      confidence: 87,
-      color: "from-red-500 to-pink-500",
-      icon: AlertCircle,
-    },
-    {
-      title: "Average Exam Scores",
-      current: 81.3,
-      trend: +2.8,
-      percentage: "+3.6%",
-      prediction: "Projected to reach 84% by term end",
-      confidence: 92,
-      color: "from-green-500 to-emerald-500",
-      icon: TrendingUp,
-    },
-    {
-      title: "Attendance Rate",
-      current: 94.7,
-      trend: +1.2,
-      percentage: "+1.3%",
-      prediction: "On track to exceed 95% target",
-      confidence: 89,
-      color: "from-blue-500 to-cyan-500",
-      icon: Calendar,
-    },
-    {
-      title: "Fees Collection",
-      current: 94.5,
-      trend: +1.5,
-      percentage: "+1.6%",
-      prediction: "Will reach 96% before term end",
-      confidence: 91,
-      color: "from-purple-500 to-pink-500",
-      icon: DollarSign,
-    },
-  ];
+  // Empty state when no data available
+  const attendanceTrends = [];
+  const performanceTrends = [];
+  const feesCollectionTrends = [];
+  const classPerformance = [];
+  const subjectDistribution = [];
+  const predictiveMetrics = [];
 
   const COLORS = ["#3b82f6", "#8b5cf6", "#10b981", "#06b6d4", "#f59e0b", "#6366f1", "#ec4899"];
 

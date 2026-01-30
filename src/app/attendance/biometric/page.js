@@ -53,19 +53,10 @@ export default function BiometricAttendancePage() {
   const [selectedDate, setSelectedDate] = useState("December 4, 2025");
   const [attendanceData, setAttendanceData] = useState([]);
 
-  // Mock student data for selected class
-  const mockStudents = [
-    { id: 1, name: "Sarah Nakato", regNo: "S3/2023/001", photo: "SN", status: "present", scanTime: "07:32 AM", method: "fingerprint", confidence: 99.8 },
-    { id: 2, name: "John Kamau", regNo: "S3/2023/002", photo: "JK", status: "present", scanTime: "07:33 AM", method: "face", confidence: 99.5 },
-    { id: 3, name: "Grace Atim", regNo: "S3/2023/003", photo: "GA", status: "present", scanTime: "07:35 AM", method: "fingerprint", confidence: 99.9 },
-    { id: 4, name: "David Okello", regNo: "S3/2023/004", photo: "DO", status: "absent", scanTime: "-", method: "-", confidence: 0 },
-    { id: 5, name: "Alice Nambi", regNo: "S3/2023/005", photo: "AN", status: "present", scanTime: "07:38 AM", method: "fingerprint", confidence: 99.7 },
-    { id: 6, name: "Peter Mugisha", regNo: "S3/2023/006", photo: "PM", status: "present", scanTime: "07:40 AM", method: "face", confidence: 99.3 },
-    { id: 7, name: "Mary Akello", regNo: "S3/2023/007", photo: "MA", status: "present", scanTime: "07:42 AM", method: "fingerprint", confidence: 99.8 },
-    { id: 8, name: "James Ssemakula", regNo: "S3/2023/008", photo: "JS", status: "absent", scanTime: "-", method: "-", confidence: 0 },
-  ];
+  // Student data will be fetched from database - no hardcoded mock data
+  const mockStudents = [];
 
-  // Mock metrics
+  // Metrics will be calculated from real attendance data
   const metrics = [
     {
       title: "Total Students",

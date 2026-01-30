@@ -28,17 +28,13 @@ export default function ResultsEntryUI() {
     { id: 4, name: 'Assignment', totalMarks: 30 }
   ];
 
-  const mockStudents = [
-    { id: 'ST001', name: 'Ahmed Hassan', rollNumber: '15', previousMarks: 85 },
-    { id: 'ST002', name: 'Fatima Ali', rollNumber: '08', previousMarks: 92 },
-    { id: 'ST003', name: 'Omar Ibrahim', rollNumber: '22', previousMarks: 78 },
-    { id: 'ST004', name: 'Aisha Mohammed', rollNumber: '12', previousMarks: 88 },
-    { id: 'ST005', name: 'Yusuf Abdullah', rollNumber: '19', previousMarks: 95 }
-  ];
+  // Student data will be fetched from database - no hardcoded mock data
+  const mockStudents = [];
 
   const loadStudents = () => {
     if (selectedClass && selectedExam) {
-      setStudents(mockStudents);
+      // Fetch students from database instead of using mock data
+      setStudents([]);
       // Initialize marks from localStorage
       const savedMarks = localStorage.getItem(`marks_${selectedClass}_${selectedExam}_${selectedTerm}`);
       if (savedMarks) {

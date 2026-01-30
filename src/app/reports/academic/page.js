@@ -45,87 +45,29 @@ export default function AcademicReportsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showPrintModal, setShowPrintModal] = useState(false);
 
-  // Summary metrics
-  const summaryMetrics = [
-    {
-      title: "Overall Pass Rate",
-      value: "87.4%",
-      change: "+5.2%",
-      trend: "up",
-      icon: Award,
-      color: "from-green-500 to-emerald-600",
-    },
-    {
-      title: "Average Attendance",
-      value: "94.8%",
-      change: "+2.1%",
-      trend: "up",
-      icon: Calendar,
-      color: "from-blue-500 to-cyan-600",
-    },
-    {
-      title: "Discipline Cases",
-      value: "127",
-      change: "-8.3%",
-      trend: "down",
-      icon: AlertTriangle,
-      color: "from-red-500 to-rose-600",
-    },
-    {
-      title: "Active Students",
-      value: "4,247",
-      change: "+3.1%",
-      trend: "up",
-      icon: GraduationCap,
-      color: "from-purple-500 to-pink-600",
-    },
-  ];
+  // Data loading state (will be fetched from database in Phase 3)
+  const [reportsData, setReportsData] = useState(null);
 
-  // Class performance data
-  const classPerformance = [
-    { class: "P1", avgScore: 78.5, passRate: 92, attendance: 96.2, students: 180 },
-    { class: "P2", avgScore: 76.2, passRate: 89, attendance: 95.8, students: 175 },
-    { class: "P3", avgScore: 79.8, passRate: 94, attendance: 96.5, students: 182 },
-    { class: "P4", avgScore: 74.3, passRate: 86, attendance: 94.3, students: 178 },
-    { class: "P5", avgScore: 81.2, passRate: 95, attendance: 97.1, students: 185 },
-    { class: "P6", avgScore: 77.6, passRate: 91, attendance: 95.4, students: 180 },
-    { class: "P7", avgScore: 83.4, passRate: 96, attendance: 97.8, students: 190 },
-    { class: "S1", avgScore: 72.8, passRate: 84, attendance: 93.6, students: 220 },
-    { class: "S2", avgScore: 75.1, passRate: 87, attendance: 94.2, students: 215 },
-    { class: "S3", avgScore: 78.9, passRate: 91, attendance: 95.7, students: 225 },
-    { class: "S4", avgScore: 80.3, passRate: 93, attendance: 96.3, students: 218 },
-    { class: "S5", avgScore: 76.4, passRate: 88, attendance: 94.8, students: 210 },
-    { class: "S6", avgScore: 82.1, passRate: 95, attendance: 97.2, students: 205 },
-  ];
+  // Placeholder for real data fetching
+  // useEffect(() => {
+  //   const fetchReportsData = async () => {
+  //     try {
+  //       const response = await fetch('/api/reports/academic');
+  //       const data = await response.json();
+  //       setReportsData(data);
+  //     } catch (error) {
+  //       setReportsData({ isEmpty: true });
+  //     }
+  //   };
+  //   fetchReportsData();
+  // }, []);
 
-  // Subject performance trends
-  const subjectPerformance = [
-    { month: "Aug", math: 75, english: 82, science: 78, history: 80 },
-    { month: "Sep", math: 78, english: 84, science: 80, history: 82 },
-    { month: "Oct", math: 80, english: 85, science: 82, history: 83 },
-    { month: "Nov", math: 82, english: 87, science: 84, history: 85 },
-    { month: "Dec", math: 84, english: 88, science: 86, history: 87 },
-  ];
-
-  // Attendance trends
-  const attendanceTrends = [
-    { week: "Week 1", p1_p3: 94.5, p4_p7: 95.2, s1_s3: 93.8, s4_s6: 96.1 },
-    { week: "Week 2", p1_p3: 95.1, p4_p7: 96.0, s1_s3: 94.5, s4_s6: 96.8 },
-    { week: "Week 3", p1_p3: 94.8, p4_p7: 95.7, s1_s3: 94.2, s4_s6: 96.5 },
-    { week: "Week 4", p1_p3: 95.5, p4_p7: 96.3, s1_s3: 95.0, s4_s6: 97.2 },
-    { week: "Week 5", p1_p3: 95.2, p4_p7: 96.1, s1_s3: 94.7, s4_s6: 96.9 },
-    { week: "Week 6", p1_p3: 96.0, p4_p7: 96.8, s1_s3: 95.4, s4_s6: 97.5 },
-  ];
-
-  // Recent discipline cases
-  const disciplineCases = [
-    { id: "DC-2024-842", student: "John Kamau", class: "S3A", date: "2024-12-02", offense: "Late coming", severity: "minor", action: "Warning issued" },
-    { id: "DC-2024-841", student: "Sarah Nakato", class: "P5B", date: "2024-12-01", offense: "Incomplete homework", severity: "minor", action: "Parent contacted" },
-    { id: "DC-2024-840", student: "David Okello", class: "S2C", date: "2024-11-30", offense: "Disruptive behavior", severity: "moderate", action: "2-day suspension" },
-    { id: "DC-2024-839", student: "Grace Atim", class: "P7A", date: "2024-11-29", offense: "Uniform violation", severity: "minor", action: "Warning issued" },
-    { id: "DC-2024-838", student: "Michael Ssemakula", class: "S4B", date: "2024-11-28", offense: "Fighting", severity: "severe", action: "1-week suspension" },
-    { id: "DC-2024-837", student: "Alice Nambi", class: "S1A", date: "2024-11-27", offense: "Cheating in exam", severity: "moderate", action: "Grade penalty" },
-  ];
+  // Empty state when no data available
+  const summaryMetrics = [];
+  const classPerformance = [];
+  const subjectPerformance = [];
+  const attendanceTrends = [];
+  const disciplineCases = [];
 
   const getSeverityBadge = (severity) => {
     const colors = {

@@ -36,13 +36,8 @@ export default function CertificateGeneration() {
     { id: 'custom', name: 'Custom Certificate', icon: Settings, color: 'gray', desc: 'Create a custom certificate' }
   ];
 
-  const mockStudents = [
-    { id: 'ST001', name: 'Ahmed Hassan', class: 'Grade 9A', achievements: 'Top Performer', selected: false },
-    { id: 'ST002', name: 'Fatima Noor', class: 'Grade 9A', achievements: 'Excellence Award', selected: false },
-    { id: 'ST003', name: 'Omar Khalil', class: 'Grade 9B', achievements: 'Perfect Attendance', selected: false },
-    { id: 'ST004', name: 'Aisha Ibrahim', class: 'Grade 10A', achievements: 'Tahfiz Champion', selected: false },
-    { id: 'ST005', name: 'Yusuf Ali', class: 'Grade 10A', achievements: 'Science Fair Winner', selected: false }
-  ];
+  // Student data will be fetched from database - no hardcoded mock data
+  const mockStudents = [];
 
   const templates = [
     { id: 'classic', name: 'Classic Elegant', preview: 'Traditional border with formal layout' },
