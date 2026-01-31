@@ -1,29 +1,220 @@
 "use client";
 
-import DashboardLayout from "@/components/dashboard-layout";
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useRouter, useSearchParams } from 'next/navigation';
+import DashboardLayout from '@/components/dashboard-layout';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { LoadingState } from '@/components/ui/loading-state';
+import { EmptyState } from '@/components/ui/empty-state';
+import { motion } from 'framer-motion';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Loader, AlertCircle, Download, Printer, Plus } from "lucide-react";
+  ArrowLeft,
+  Download,
+  PrinterIcon,
+  Camera,
+  AlertCircle,
+  QrCode,
+} from 'lucide-react';
+import toast from 'react-hot-toast';
+
+export default function IDCardsPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const studentId = searchParams.get('id');
+
+  const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchStudents();
+  }, []);
+
+  const fetchStudents = async () => {
+    setLoading(true);
+    try {
+      const url = studentId
+        ? `/api/modules/students?id=${studentId}`
+        : '/api/modules/students?limit=50';
+      
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Failed to fetch students');
+      
+      const data = await response.json();
+      setStudents(Array.isArray(data) ? data : data.data ? [data.data] : []);
+    } catch (err) {
+      console.error('Error fetching students:', err);
+      toast.error('Failed to load students');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <LoadingState message="Loading ID cards..." fullScreen />
+      </DashboardLayout>
+    );
+  }
+
+  return (
+    <DashboardLayout>
+      <div className="space-y-6">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center justify-between"
+        >
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => router.back()}
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold">Student ID Cards</h1>
+              <p className="text-gray-600 dark:text-gray-400">
+                Generate and manage student identification cards
+              </p>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* ID Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {students.map((student, idx) => (
+            <motion.div
+              key={student.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.1 }}
+            >
+              {/* ID Card Design */}
+              <div className="relative">
+                {/* Front of card */}
+                <Card className="overflow-hidden shadow-xl hover:shadow-2xl transition-shadow">
+                  <CardContent className="p-0">
+                    {/* Card Header (School Info) */}
+                    <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 text-center">
+                      <h3 className="font-bold text-lg">DRAIS School</h3>
+                      <p className="text-xs opacity-90">Student Identification Card</p>
+                    </div>
+
+                    {/* Card Body */}
+                    <div className="p-6 space-y-4">
+                      {/* Student Photo */}
+                      <div className="flex justify-center">
+                        <Avatar className="w-24 h-24 border-4 border-blue-200">
+                          <AvatarImage src={student.photo_url} />
+                          <AvatarFallback className="text-lg bg-gradient-to-r from-blue-500 to-purple-600 text-white">
+                            {student.first_name?.[0]}{student.last_name?.[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                      </div>
+
+                      {/* Student Info */}
+                      <div className="text-center space-y-1">
+                        <h4 className="font-bold text-lg text-gray-900 dark:text-white">
+                          {student.first_name} {student.last_name}
+                        </h4>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          {student.class_name || 'Class Unassigned'}
+                        </p>
+                      </div>
+
+                      {/* Details Grid */}
+                      <div className="grid grid-cols-2 gap-2 text-xs border-t border-b border-gray-200 dark:border-gray-700 py-2">
+                        <div>
+                          <p className="text-gray-500 dark:text-gray-400">Admission No.</p>
+                          <p className="font-semibold text-gray-900 dark:text-white">
+                            {student.admission_number}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-gray-500 dark:text-gray-400">Date of Birth</p>
+                          <p className="font-semibold text-gray-900 dark:text-white">
+                            {student.dob
+                              ? new Date(student.dob).toLocaleDateString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  year: '2-digit',
+                                })
+                              : '—'}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Issue/Expiry Dates */}
+                      <div className="text-xs text-center text-gray-500 dark:text-gray-400">
+                        <p>Issued: {new Date().toLocaleDateString()}</p>
+                        <p>Valid until: {new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toLocaleDateString()}</p>
+                      </div>
+                    </div>
+
+                    {/* Card Footer (ID/Signature line) */}
+                    <div className="bg-gray-50 dark:bg-gray-800 px-6 py-2 text-center">
+                      <div className="flex items-center justify-center gap-1 text-gray-500 text-xs">
+                        <QrCode className="w-3 h-3" />
+                        <span>ID: {student.id}</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Action Buttons */}
+                <div className="mt-4 flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 gap-2"
+                    onClick={() => router.push(`/students/${student.id}/photo`)}
+                  >
+                    <Camera className="w-4 h-4" />
+                    Change Photo
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="flex-1 gap-2"
+                    onClick={() => window.print()}
+                  >
+                    <PrinterIcon className="w-4 h-4" />
+                    Print
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="flex-1 gap-2"
+                    onClick={() => {
+                      // Could implement PDF download here
+                      toast.success('Download feature coming soon');
+                    }}
+                  >
+                    <Download className="w-4 h-4" />
+                    PDF
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        {students.length === 0 && (
+          <EmptyState
+            icon={AlertCircle}
+            title="No Students"
+            description="No students found to generate ID cards"
+            action={<Button onClick={() => router.push('/students')}>View Students</Button>}
+          />
+        )}
+      </div>
+    </DashboardLayout>
+  );
+}
 
 export default function IDCardsPage() {
   const router = useRouter();

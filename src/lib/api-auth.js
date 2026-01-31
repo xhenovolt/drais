@@ -69,9 +69,11 @@ export async function getApiAuthUser(request) {
     }
 
     return {
-      userId: session.user.id,
+      id: session.user.id,
       email: session.user.email,
-      role: session.user.role,
+      role: session.user.role || 'client',
+      username: session.user.username,
+      school_id: session.user.school_id,
     };
   } catch (error) {
     console.error('[ApiAuth] Get auth user error:', error);

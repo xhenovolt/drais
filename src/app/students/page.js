@@ -59,6 +59,11 @@ export default function StudentsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalStudents, setTotalStudents] = useState(0);
   const [activeCount, setActiveCount] = useState(0);
+  const [editingStudent, setEditingStudent] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editForm, setEditForm] = useState({});
+  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
+  const [operationLoading, setOperationLoading] = useState(false);
 
   // Fetch students from API
   useEffect(() => {
@@ -135,6 +140,78 @@ export default function StudentsPage() {
     setPage(1);
   };
 
+  const handleViewStudent = (student) => {
+    router.push(`/students/${student.id}`);
+  };
+
+  const handleEditStudent = (student) => {
+    setEditingStudent(student);
+    setEditForm({
+      id: student.id,
+      first_name: student.first_name,
+      last_name: student.last_name,
+      email: student.email || '',
+      phone: student.phone || '',
+      address: student.address || '',
+      gender: student.gender || '',
+      dob: student.dob || '',
+    });
+    setShowEditModal(true);
+  };
+
+  const handleUpdateStudent = async () => {
+    setOperationLoading(true);
+    try {
+      const response = await fetch('/api/modules/students', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editForm),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to update student');
+      }
+
+      setError(null);
+      setShowEditModal(false);
+      setEditingStudent(null);
+      // Refresh students list
+      fetchStudents();
+    } catch (err) {
+      setError(err.message);
+      console.error('Error updating student:', err);
+    } finally {
+      setOperationLoading(false);
+    }
+  };
+
+  const handleDeleteStudent = async (studentId) => {
+    setOperationLoading(true);
+    try {
+      const response = await fetch('/api/modules/students', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: studentId }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to delete student');
+      }
+
+      setError(null);
+      setDeleteConfirmId(null);
+      // Refresh students list
+      fetchStudents();
+    } catch (err) {
+      setError(err.message);
+      console.error('Error deleting student:', err);
+    } finally {
+      setOperationLoading(false);
+    }
+  };
+
   const formatStudentInitials = (firstName, lastName) => {
     return `${firstName?.[0] || ''}${lastName?.[0] || ''}`.toUpperCase();
   };
@@ -142,7 +219,7 @@ export default function StudentsPage() {
   const formatDate = (date) => {
     if (!date) return '-';
     return new Date(date).toLocaleDateString('en-US', { 
-      year: 'numeric', 
+      year: 'numeric',
       month: 'short', 
       day: 'numeric' 
     });
@@ -434,15 +511,24 @@ export default function StudentsPage() {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                <DropdownMenuItem className="gap-2">
+                                <DropdownMenuItem 
+                                  className="gap-2"
+                                  onClick={() => handleViewStudent(student)}
+                                >
                                   <Eye className="w-4 h-4" />
                                   View Details
                                 </DropdownMenuItem>
-                                <DropdownMenuItem className="gap-2">
+                                <DropdownMenuItem 
+                                  className="gap-2"
+                                  onClick={() => handleEditStudent(student)}
+                                >
                                   <Edit className="w-4 h-4" />
                                   Edit
                                 </DropdownMenuItem>
-                                <DropdownMenuItem className="gap-2 text-red-600">
+                                <DropdownMenuItem 
+                                  className="gap-2 text-red-600"
+                                  onClick={() => setDeleteConfirmId(student.id)}
+                                >
                                   <Trash2 className="w-4 h-4" />
                                   Delete
                                 </DropdownMenuItem>
@@ -495,6 +581,130 @@ export default function StudentsPage() {
               )}
             </CardContent>
           </Card>
+
+          {/* Edit Modal */}
+          {showEditModal && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <Card className="w-full max-w-md">
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle>Edit Student</CardTitle>
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    onClick={() => {
+                      setShowEditModal(false);
+                      setEditingStudent(null);
+                    }}
+                    disabled={operationLoading}
+                  >
+                    ✕
+                  </Button>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">First Name</label>
+                    <input
+                      type="text"
+                      value={editForm.first_name || ''}
+                      onChange={(e) => setEditForm({...editForm, first_name: e.target.value})}
+                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      disabled={operationLoading}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Last Name</label>
+                    <input
+                      type="text"
+                      value={editForm.last_name || ''}
+                      onChange={(e) => setEditForm({...editForm, last_name: e.target.value})}
+                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      disabled={operationLoading}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Email</label>
+                    <input
+                      type="email"
+                      value={editForm.email || ''}
+                      onChange={(e) => setEditForm({...editForm, email: e.target.value})}
+                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      disabled={operationLoading}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Phone</label>
+                    <input
+                      type="tel"
+                      value={editForm.phone || ''}
+                      onChange={(e) => setEditForm({...editForm, phone: e.target.value})}
+                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      disabled={operationLoading}
+                    />
+                  </div>
+                  {error && (
+                    <div className="p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+                      {error}
+                    </div>
+                  )}
+                </CardContent>
+                <CardHeader className="flex flex-row gap-2 justify-end pt-0">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setShowEditModal(false);
+                      setEditingStudent(null);
+                    }}
+                    disabled={operationLoading}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleUpdateStudent}
+                    disabled={operationLoading}
+                  >
+                    {operationLoading ? 'Saving...' : 'Save Changes'}
+                  </Button>
+                </CardHeader>
+              </Card>
+            </div>
+          )}
+
+          {/* Delete Confirmation Dialog */}
+          {deleteConfirmId && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <Card className="w-full max-w-sm">
+                <CardHeader>
+                  <CardTitle className="text-red-600">Confirm Delete</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-gray-600 mb-4">
+                    Are you sure you want to delete this student? This action cannot be undone.
+                  </p>
+                  {error && (
+                    <div className="p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm mb-4">
+                      {error}
+                    </div>
+                  )}
+                </CardContent>
+                <CardHeader className="flex flex-row gap-2 justify-end pt-0">
+                  <Button
+                    variant="outline"
+                    onClick={() => setDeleteConfirmId(null)}
+                    disabled={operationLoading}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={() => handleDeleteStudent(deleteConfirmId)}
+                    disabled={operationLoading}
+                  >
+                    {operationLoading ? 'Deleting...' : 'Delete'}
+                  </Button>
+                </CardHeader>
+              </Card>
+            </div>
+          )}
         </motion.div>
       </div>
     </DashboardLayout>

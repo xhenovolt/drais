@@ -4,6 +4,11 @@
  * 
  * CRUD operations for student management
  * Demonstrates the modular API pattern
+ * 
+ * GET    /api/modules/students - List students
+ * POST   /api/modules/students - Create student
+ * PATCH  /api/modules/students - Update specific student (requires id in body)
+ * DELETE /api/modules/students - Delete specific student (requires id in body)
  */
 
 import { NextResponse } from 'next/server';
@@ -82,6 +87,72 @@ async function createStudent(request) {
   }
 }
 
+/**
+ * PATCH /api/modules/students
+ * Update specific student by ID (passed in body)
+ * 
+ * Request body: { id: number, ...updateFields }
+ */
+async function updateStudent(request) {
+  try {
+    const user = request.user;
+    const body = await request.json();
+    const { id } = body;
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, error: 'Student ID is required in request body' },
+        { status: 400 }
+      );
+    }
+
+    const result = await crud.update('student', id, body, user.id);
+
+    return NextResponse.json(result, { status: 200 });
+
+  } catch (error) {
+    console.error('Update student error:', error);
+    return NextResponse.json(
+      { success: false, error: error.message || 'Failed to update student' },
+      { status: error.message === 'Record not found' ? 404 : 500 }
+    );
+  }
+}
+
+/**
+ * DELETE /api/modules/students
+ * Soft delete student by ID (passed in body)
+ * 
+ * Request body: { id: number }
+ */
+async function deleteStudent(request) {
+  try {
+    const user = request.user;
+    const body = await request.json();
+    const { id } = body;
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, error: 'Student ID is required in request body' },
+        { status: 400 }
+      );
+    }
+
+    const result = await crud.softDelete('student', id, user.id);
+
+    return NextResponse.json(result, { status: 200 });
+
+  } catch (error) {
+    console.error('Delete student error:', error);
+    return NextResponse.json(
+      { success: false, error: error.message || 'Failed to delete student' },
+      { status: error.message === 'Record not found' ? 404 : 500 }
+    );
+  }
+}
+
 // Export with middleware
 export const GET = requireModuleAccess('students', 'read')(getStudents);
 export const POST = requireModuleAccess('students', 'create')(createStudent);
+export const PATCH = requireModuleAccess('students', 'update')(updateStudent);
+export const DELETE = requireModuleAccess('students', 'delete')(deleteStudent);

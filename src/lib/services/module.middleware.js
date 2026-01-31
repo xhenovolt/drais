@@ -10,6 +10,7 @@
 
 import { requireAuth } from '../auth/jwt-enhanced.js';
 import { canAccessDashboard } from './onboarding.middleware.js';
+import { getApiAuthUser } from '../api-auth.js';
 
 /**
  * Check if user can access a specific module
@@ -144,8 +145,21 @@ export function requireModuleAccess(moduleName, action = 'read') {
   return function (handler) {
     return async function (request, context) {
       try {
-        // Verify authentication
-        const user = await requireAuth(request);
+        // Try JWT auth first
+        let user = await requireAuth(request);
+        
+        // Fallback to session-based auth if JWT fails
+        if (!user || !user.id) {
+          user = await getApiAuthUser(request);
+        }
+        
+        // Check if user is authenticated
+        if (!user || !user.id) {
+          return new Response(
+            JSON.stringify({ success: false, error: 'Unauthorized - Please log in' }),
+            { status: 401, headers: { 'Content-Type': 'application/json' } }
+          );
+        }
         
         // Check module access
         const access = await canAccessModule(user, moduleName, action);
