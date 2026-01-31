@@ -194,16 +194,20 @@ export async function deleteAllUserSessions(userId) {
 
 /**
  * Get secure cookie options for jeton_session
+ * Configured for serverless (Vercel) compatibility
  * 
  * @returns {Object} Cookie options for setting response.cookies.set()
  */
 export function getSecureCookieOptions() {
+  const isDev = process.env.NODE_ENV === 'development';
+  
   return {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    secure: !isDev, // Secure in production
+    sameSite: 'lax', // Cross-site cookie handling
     maxAge: 604800, // 7 days in seconds
-    path: '/',
+    path: '/', // Available site-wide
+    // Don't set domain in serverless - let browser handle it
   };
 }
 

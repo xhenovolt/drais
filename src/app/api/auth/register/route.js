@@ -1,18 +1,35 @@
 /**
- * Registration Endpoint (Jeton Compatible)
+ * Registration Endpoint (Serverless-Safe)
  * POST /api/auth/register
  * 
  * Creates new user and automatically logs them in
  * Sets jeton_session HTTP-only cookie
+ * 
+ * Optimized for serverless with:
+ * - Timeout handling
+ * - Parallel operations
+ * - Proper error responses
  */
 
 import { NextResponse } from 'next/server';
 import { createUser, updateLastLogin } from '@/lib/auth.js';
 import { createSession, getSecureCookieOptions } from '@/lib/session.js';
 
+// 30 second timeout for the entire request
+const REQUEST_TIMEOUT = 30000;
+
 export async function POST(request) {
+  const requestStart = Date.now();
+  
   try {
-    const body = await request.json();
+    // Parse body with timeout
+    const body = await Promise.race([
+      request.json(),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Request timeout: body parsing')), REQUEST_TIMEOUT)
+      )
+    ]);
+
     const { email, password } = body;
 
     // Input validation
@@ -37,18 +54,51 @@ export async function POST(request) {
       );
     }
 
+    if (email.length > 255) {
+      return NextResponse.json(
+        { error: 'Email is too long' },
+        { status: 400 }
+      );
+    }
+
+    // Check timeout
+    if (Date.now() - requestStart > REQUEST_TIMEOUT * 0.8) {
+      return NextResponse.json(
+        { error: 'Request processing timeout' },
+        { status: 504 }
+      );
+    }
+
     // Create user with hashed password
-    const user = await createUser(email, password);
+    const user = await Promise.race([
+      createUser(email, password),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('User creation timeout')), REQUEST_TIMEOUT * 0.5)
+      )
+    ]);
+
+    // Check timeout
+    if (Date.now() - requestStart > REQUEST_TIMEOUT * 0.8) {
+      return NextResponse.json(
+        { error: 'Request processing timeout' },
+        { status: 504 }
+      );
+    }
 
     // Auto-login: Create session
-    const sessionId = await createSession(user.id);
+    const sessionId = await Promise.race([
+      createSession(user.id),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Session creation timeout')), REQUEST_TIMEOUT * 0.5)
+      )
+    ]);
 
-    // Update last login (non-blocking)
+    // Update last login (non-blocking, fire and forget)
     updateLastLogin(user.id).catch(err => 
       console.error('[Register] Update last login error:', err)
     );
 
-    // Create response with user data (frontend needs this)
+    // Create response with user data
     const response = NextResponse.json(
       {
         success: true,
@@ -61,7 +111,7 @@ export async function POST(request) {
             status: user.status,
           },
         },
-        redirectTo: '/dashboard',
+        redirectTo: '/onboarding/step1',
       },
       { status: 201 }
     );
@@ -77,16 +127,23 @@ export async function POST(request) {
   } catch (error) {
     console.error('[Register] Error:', error);
 
-    // Check for specific errors
+    // Handle specific errors
     if (error.message === 'User already exists') {
       return NextResponse.json(
         { error: 'Email already registered' },
-        { status: 400 }
+        { status: 409 }
+      );
+    }
+
+    if (error.message.includes('timeout')) {
+      return NextResponse.json(
+        { error: 'Request timeout - please try again' },
+        { status: 504 }
       );
     }
 
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Registration failed - please try again' },
       { status: 500 }
     );
   }

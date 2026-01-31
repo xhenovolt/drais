@@ -1,0 +1,16 @@
+  column_name   |          data_type          | is_nullable 
+----------------+-----------------------------+-------------
+ id             | uuid                        | NO
+ user_id        | bigint                      | NO
+ ip_address     | character varying           | YES
+ user_agent     | text                        | YES
+ created_at     | timestamp without time zone | NO
+ last_activity  | timestamp without time zone | NO
+ expires_at     | timestamp without time zone | NO
+ stay_logged_in | boolean                     | YES
+ is_active      | boolean                     | YES
+ logged_out_at  | timestamp without time zone | YES
+ session_token  | character varying           | YES
+ school_id      | bigint                      | YES
+(12 rows)
+
